@@ -2,17 +2,26 @@
 Embedding generation and vector store operations.
 """
 import logging
+import os
 from dataclasses import dataclass
-from typing import Any
-
+from typing import Any, Optional
+import uuid
 
 try:
-    from supabase import Client as SupabaseClient
-    from supabase import create_client
+    import chromadb
+    from chromadb.config import Settings as ChromaSettings
 except ImportError as e:
-    logging.warning(f"Vector store dependencies not available: {e}")
-    SupabaseClient = None  # type: ignore
-    create_client = None  # type: ignore
+    logging.warning(f"ChromaDB not available: {e}")
+    chromadb = None
+    ChromaSettings = None
+
+try:
+    import pinecone
+    from pinecone import Pinecone
+except ImportError as e:
+    logging.warning(f"Pinecone not available: {e}")
+    pinecone = None
+    Pinecone = None
 
 from config import settings
 from extract import Feedback
@@ -46,149 +55,226 @@ class VectorStore:
         """Delete documents from vector store."""
         raise NotImplementedError
 
-class SupabaseVectorStore(VectorStore):
-    """Supabase (pgvector) implementation."""
+class ChromaDBVectorStore(VectorStore):
+    """ChromaDB implementation for local vector storage."""
 
     def __init__(self) -> None:
-        if not settings.supabase_url or not settings.supabase_key:
-            raise ValueError("Supabase credentials not configured")
+        if chromadb is None:
+            raise ImportError("ChromaDB not available. Install with: pip install chromadb")
 
-        if create_client is None:
-            raise ImportError("Supabase client not available")
+        # Set up ChromaDB client
+        if settings.chromadb_host == "localhost" and settings.chromadb_port == 8000:
+            # Use persistent local storage
+            client_settings = None
+            if ChromaSettings is not None:
+                client_settings = ChromaSettings(
+                    anonymized_telemetry=False,
+                    allow_reset=True
+                )
 
-        self.client = create_client(
-            settings.supabase_url,
-            settings.supabase_key
+            self.client = chromadb.PersistentClient(
+                path=settings.chromadb_persist_directory,
+                settings=client_settings
+            )
+        else:
+            # Use HTTP client for remote ChromaDB
+            client_settings = None
+            if ChromaSettings is not None:
+                client_settings = ChromaSettings(
+                    anonymized_telemetry=False
+                )
+
+            self.client = chromadb.HttpClient(
+                host=settings.chromadb_host,
+                port=settings.chromadb_port,
+                settings=client_settings
+            )
+
+        # Get or create collection
+        self.collection = self.client.get_or_create_collection(
+            name=settings.chromadb_collection_name,
+            metadata={"hnsw:space": "cosine"}
         )
-        self.table_name = "embeddings"
-        self._ensure_table_exists()
-
-    def _ensure_table_exists(self) -> None:
-        """Ensure the embeddings table exists."""
-        # This would typically be done via SQL migration
-        # For now, we'll assume the table exists with the correct schema
 
     async def add_documents(self, documents: list[EmbeddingDocument]) -> bool:
-        """Add documents to Supabase."""
+        """Add documents to ChromaDB."""
         try:
-            data = []
+            ids = []
+            embeddings = []
+            metadatas = []
+            documents_content = []
+
             for doc in documents:
-                data.append({
-                    "id": doc.id,
-                    "content": doc.content,
-                    "embedding": doc.embedding,
-                    "metadata": doc.metadata,
-                    "doc_type": doc.doc_type
-                })
+                ids.append(doc.id)
+                embeddings.append(doc.embedding)
 
-            self.client.table(self.table_name).upsert(data).execute()
-            logger.info(f"Added {len(documents)} documents to Supabase")
+                # ChromaDB metadata must be JSON serializable
+                metadata = {
+                    "doc_type": doc.doc_type,
+                    "content": doc.content[:1000],  # Truncate for metadata
+                    **{k: str(v) if not isinstance(v, (str, int, float, bool)) else v
+                       for k, v in doc.metadata.items()}
+                }
+                metadatas.append(metadata)
+                documents_content.append(doc.content)
+
+            self.collection.upsert(
+                ids=ids,
+                embeddings=embeddings,
+                metadatas=metadatas,
+                documents=documents_content
+            )
+
+            logger.info(f"Added {len(documents)} documents to ChromaDB")
             return True
 
         except Exception as e:
-            logger.error(f"Error adding documents to Supabase: {e}")
+            logger.error(f"Error adding documents to ChromaDB: {e}")
             return False
 
     async def search(self, query_embedding: list[float], limit: int = 5) -> list[dict[str, Any]]:
-        """Search for similar documents in Supabase."""
+        """Search for similar documents in ChromaDB."""
         try:
-            # Use Supabase's vector similarity search
-            # This assumes you have the pgvector extension and proper RPC function
-            result = self.client.rpc(
-                "match_documents",
-                {
-                    "query_embedding": query_embedding,
-                    "match_threshold": 0.1,
-                    "match_count": limit
-                }
-            ).execute()
+            results = self.collection.query(
+                query_embeddings=[query_embedding],
+                n_results=limit,
+                include=["documents", "metadatas", "distances"]
+            )
 
-            return result.data or []
+            formatted_results = []
+            if results["ids"] and len(results["ids"]) > 0:
+                for i in range(len(results["ids"][0])):
+                    result = {
+                        "id": results["ids"][0][i],
+                        "content": results["documents"][0][i] if results["documents"] else "",
+                        "metadata": results["metadatas"][0][i] if results["metadatas"] else {},
+                        "score": 1 - results["distances"][0][i],  # Convert distance to similarity
+                        "doc_type": results["metadatas"][0][i].get("doc_type", "") if results["metadatas"] else ""
+                    }
+                    formatted_results.append(result)
+
+            return formatted_results
 
         except Exception as e:
-            logger.error(f"Error searching Supabase: {e}")
+            logger.error(f"Error searching ChromaDB: {e}")
             return []
 
     async def delete_documents(self, doc_ids: list[str]) -> bool:
-        """Delete documents from Supabase."""
+        """Delete documents from ChromaDB."""
         try:
-            self.client.table(self.table_name).delete().in_("id", doc_ids).execute()
-            logger.info(f"Deleted {len(doc_ids)} documents from Supabase")
+            self.collection.delete(ids=doc_ids)
+            logger.info(f"Deleted {len(doc_ids)} documents from ChromaDB")
             return True
 
         except Exception as e:
-            logger.error(f"Error deleting documents from Supabase: {e}")
+            logger.error(f"Error deleting documents from ChromaDB: {e}")
             return False
 
-class WeaviateVectorStore(VectorStore):
-    """Weaviate implementation."""
+class PineconeVectorStore(VectorStore):
+    """Pinecone implementation for cloud vector storage."""
 
     def __init__(self) -> None:
-        if not settings.weaviate_url:
-            raise ValueError("Weaviate URL not configured")
+        if not settings.pinecone_api_key:
+            raise ValueError("Pinecone API key not configured")
 
-        # Use weaviate v4 API
-        import weaviate
-        from weaviate.auth import AuthApiKey
+        if Pinecone is None:
+            raise ImportError("Pinecone not available. Install with: pip install pinecone-client")
 
-        auth_config = None
-        if settings.weaviate_api_key:
-            auth_config = AuthApiKey(api_key=settings.weaviate_api_key)
+        # Initialize Pinecone
+        self.pc = Pinecone(api_key=settings.pinecone_api_key)
 
-        self.client = weaviate.connect_to_custom(
-            http_host=settings.weaviate_url.replace("http://", "").replace("https://", ""),
-            http_port=8080,
-            http_secure=settings.weaviate_url.startswith("https://"),
-            grpc_host=settings.weaviate_url.replace("http://", "").replace("https://", ""),
-            grpc_port=50051,
-            grpc_secure=settings.weaviate_url.startswith("https://"),
-            auth_credentials=auth_config
-        )
-        self.class_name = "Document"
-        self._ensure_schema_exists()
+        # Get or create index
+        self.index_name = settings.pinecone_index_name
+        self._ensure_index_exists()
+        self.index = self.pc.Index(self.index_name)
 
-    def _ensure_schema_exists(self) -> None:
-        """Ensure Weaviate schema exists."""
+    def _ensure_index_exists(self) -> None:
+        """Ensure Pinecone index exists."""
         try:
-            # For Weaviate v4, collections are managed differently
-            # This is a simplified placeholder - in practice you'd need to
-            # create collections using the new v4 API
-            pass
+            existing_indexes = [index.name for index in self.pc.list_indexes()]
+
+            if self.index_name not in existing_indexes:
+                # Create index with appropriate dimensions
+                self.pc.create_index(
+                    name=self.index_name,
+                    dimension=settings.embedding_dimensions,
+                    metric="cosine",
+                    spec={"serverless": {"cloud": "aws", "region": "us-east-1"}}
+                )
+                logger.info(f"Created Pinecone index: {self.index_name}")
+            else:
+                logger.info(f"Using existing Pinecone index: {self.index_name}")
+
         except Exception as e:
-            logger.warning(f"Schema creation warning: {e}")
+            logger.error(f"Error managing Pinecone index: {e}")
+            raise
 
     async def add_documents(self, documents: list[EmbeddingDocument]) -> bool:
-        """Add documents to Weaviate."""
+        """Add documents to Pinecone."""
         try:
-            # Placeholder for Weaviate v4 API
-            # In practice, you'd use the new collections API
-            logger.info(f"Would add {len(documents)} documents to Weaviate")
+            vectors = []
+            for doc in documents:
+                vector = {
+                    "id": doc.id,
+                    "values": doc.embedding,
+                    "metadata": {
+                        "doc_type": doc.doc_type,
+                        "content": doc.content[:40000],  # Pinecone metadata limit
+                        **{k: str(v) if not isinstance(v, (str, int, float, bool)) else v
+                           for k, v in doc.metadata.items()}
+                    }
+                }
+                vectors.append(vector)
+
+            # Upsert in batches to avoid size limits
+            batch_size = 100
+            for i in range(0, len(vectors), batch_size):
+                batch = vectors[i:i + batch_size]
+                self.index.upsert(vectors=batch)
+
+            logger.info(f"Added {len(documents)} documents to Pinecone")
             return True
 
         except Exception as e:
-            logger.error(f"Error adding documents to Weaviate: {e}")
+            logger.error(f"Error adding documents to Pinecone: {e}")
             return False
 
     async def search(self, query_embedding: list[float], limit: int = 5) -> list[dict[str, Any]]:
-        """Search for similar documents in Weaviate."""
+        """Search for similar documents in Pinecone."""
         try:
-            # Placeholder for Weaviate v4 API
-            logger.info(f"Would search Weaviate with limit {limit}")
-            return []
+            response = self.index.query(
+                vector=query_embedding,
+                top_k=limit,
+                include_metadata=True,
+                include_values=False
+            )
+
+            formatted_results = []
+            for match in response.matches:
+                result = {
+                    "id": match.id,
+                    "content": match.metadata.get("content", ""),
+                    "metadata": match.metadata,
+                    "score": match.score,
+                    "doc_type": match.metadata.get("doc_type", "")
+                }
+                formatted_results.append(result)
+
+            return formatted_results
 
         except Exception as e:
-            logger.error(f"Error searching Weaviate: {e}")
+            logger.error(f"Error searching Pinecone: {e}")
             return []
 
     async def delete_documents(self, doc_ids: list[str]) -> bool:
-        """Delete documents from Weaviate."""
+        """Delete documents from Pinecone."""
         try:
-            # Placeholder for Weaviate v4 API
-            logger.info(f"Would delete {len(doc_ids)} documents from Weaviate")
+            self.index.delete(ids=doc_ids)
+            logger.info(f"Deleted {len(doc_ids)} documents from Pinecone")
             return True
 
         except Exception as e:
-            logger.error(f"Error deleting documents from Weaviate: {e}")
+            logger.error(f"Error deleting documents from Pinecone: {e}")
             return False
 
 class EmbeddingManager:
@@ -200,12 +286,12 @@ class EmbeddingManager:
 
     def _get_vector_store(self) -> VectorStore:
         """Get vector store based on configuration."""
-        if settings.vector_store.lower() == "supabase":
-            return SupabaseVectorStore()
-        elif settings.vector_store.lower() == "weaviate":
-            return WeaviateVectorStore()
+        if settings.vector_store.lower() == "chromadb":
+            return ChromaDBVectorStore()
+        elif settings.vector_store.lower() == "pinecone":
+            return PineconeVectorStore()
         else:
-            raise ValueError(f"Unsupported vector store: {settings.vector_store}")
+            raise ValueError(f"Unsupported vector store: {settings.vector_store}. Use 'chromadb' or 'pinecone'.")
 
     async def embed_feedbacks(self, feedbacks: list[Feedback]) -> list[EmbeddingDocument]:
         """Generate embeddings for feedback documents."""
@@ -222,7 +308,7 @@ class EmbeddingManager:
                 "transcript_id": feedback.transcript_id,
                 "timestamp": feedback.timestamp.isoformat(),
                 "confidence": feedback.confidence,
-                "context": feedback.context
+                "context": feedback.context or ""
             }
             metadata_list.append(metadata)
 
@@ -233,7 +319,7 @@ class EmbeddingManager:
         documents = []
         for i, feedback in enumerate(feedbacks):
             doc = EmbeddingDocument(
-                id=f"feedback_{feedback.transcript_id}_{i}",
+                id=f"feedback_{feedback.transcript_id}_{i}_{uuid.uuid4().hex[:8]}",
                 content=texts[i],
                 embedding=embeddings[i],
                 metadata=metadata_list[i],
@@ -256,11 +342,11 @@ class EmbeddingManager:
             metadata = {
                 "notion_id": problem.id,
                 "title": problem.title,
-                "status": problem.status,
-                "priority": problem.priority,
-                "tags": problem.tags or [],
+                "status": problem.status or "",
+                "priority": problem.priority or "",
+                "tags": ",".join(problem.tags) if problem.tags else "",
                 "feedback_count": problem.feedback_count,
-                "last_updated": problem.last_updated.isoformat() if problem.last_updated else None
+                "last_updated": problem.last_updated.isoformat() if problem.last_updated else ""
             }
             metadata_list.append(metadata)
 

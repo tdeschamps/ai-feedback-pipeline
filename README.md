@@ -18,7 +18,7 @@ A Python-based pipeline that uses Large Language Models (LLMs) and Retrieval-Aug
 - **Multi-LLM Support**: OpenAI GPT-4, Claude, Ollama, Groq, HuggingFace
 - **Feedback Extraction**: Automatically identifies feature requests and customer pains
 - **RAG Matching**: Semantically matches feedback to existing Notion problems
-- **Vector Storage**: Supabase (pgvector) and Weaviate support
+- **Vector Storage**: ChromaDB (local) and Pinecone (cloud) support
 - **Auto-Updates**: Updates Notion problems with matched feedback
 - **CLI & API**: Command-line interface and FastAPI web server
 - **Docker Ready**: Full containerization with docker-compose
@@ -44,9 +44,8 @@ LLM_MODEL=gpt-4o
 OPENAI_API_KEY=your_openai_key_here
 
 # Vector Store
-VECTOR_STORE=supabase
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_key
+VECTOR_STORE=chromadb
+CHROMADB_PERSIST_DIRECTORY=./chroma_db
 
 # Notion Integration
 NOTION_API_KEY=your_notion_api_key
@@ -184,18 +183,57 @@ GROQ_API_KEY=your_key
 
 ### Vector Stores
 
-#### Supabase (Recommended)
+#### ChromaDB (Local - Recommended)
+
 ```bash
-VECTOR_STORE=supabase
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your_service_role_key
+VECTOR_STORE=chromadb
+CHROMADB_HOST=localhost
+CHROMADB_PORT=8000
+CHROMADB_COLLECTION_NAME=feedback_embeddings
+CHROMADB_PERSIST_DIRECTORY=./chroma_db
 ```
 
-#### Weaviate
+#### Pinecone (Cloud)
+
 ```bash
-VECTOR_STORE=weaviate
-WEAVIATE_URL=http://localhost:8080
-WEAVIATE_API_KEY=your_key  # Optional
+VECTOR_STORE=pinecone
+PINECONE_API_KEY=your_api_key
+PINECONE_ENVIRONMENT=your_environment
+PINECONE_INDEX_NAME=feedback-pipeline
+```
+
+### Installation and Setup
+
+#### Local ChromaDB Setup (Recommended for Development)
+
+```bash
+# Install ChromaDB
+pip install chromadb
+
+# ChromaDB will create a local database automatically
+VECTOR_STORE=chromadb
+CHROMADB_PERSIST_DIRECTORY=./chroma_db
+```
+
+#### Cloud Pinecone Setup (Recommended for Production)
+
+```bash
+# Install Pinecone
+pip install pinecone-client
+
+# Get API key from https://www.pinecone.io/
+VECTOR_STORE=pinecone
+PINECONE_API_KEY=your_api_key
+PINECONE_INDEX_NAME=feedback-pipeline
+```
+
+#### Remote ChromaDB Setup (Advanced)
+
+```bash
+# For remote ChromaDB server
+VECTOR_STORE=chromadb
+CHROMADB_HOST=your-chromadb-host.com
+CHROMADB_PORT=8000
 ```
 
 ### Pipeline Settings

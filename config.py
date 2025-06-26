@@ -28,11 +28,14 @@ class Settings(BaseSettings):
     embedding_dimensions: int = 1536
 
     # Vector Store Configuration
-    vector_store: str = "supabase"
-    supabase_url: str | None = None
-    supabase_key: str | None = None
-    weaviate_url: str | None = None
-    weaviate_api_key: str | None = None
+    vector_store: str = "chromadb"
+    chromadb_host: str = "localhost"
+    chromadb_port: int = 8000
+    chromadb_collection_name: str = "feedback_embeddings"
+    chromadb_persist_directory: str = "./chroma_db"
+    pinecone_api_key: str | None = None
+    pinecone_environment: str | None = None
+    pinecone_index_name: str = "feedback-pipeline"
 
     # Notion Configuration
     notion_api_key: str | None = None

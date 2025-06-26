@@ -284,6 +284,9 @@ tmp/
 
 # Vector database files
 vector_store/
+chromadb_data/
+chroma_db/
+pinecone_index/
 *.db
 *.sqlite
 
