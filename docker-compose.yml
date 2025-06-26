@@ -1,0 +1,85 @@
+version: "3.8"
+
+services:
+  feedback-pipeline:
+    build: .
+    container_name: ai-feedback-pipeline
+    ports:
+      - "8000:8000"
+    environment:
+      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4o}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - NOTION_API_KEY=${NOTION_API_KEY}
+      - NOTION_DATABASE_ID=${NOTION_DATABASE_ID}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - VECTOR_STORE=${VECTOR_STORE:-supabase}
+      - CONFIDENCE_THRESHOLD=${CONFIDENCE_THRESHOLD:-0.7}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./data:/app/data
+      - ./.env:/app/.env
+    command: python server.py
+    restart: unless-stopped
+    depends_on:
+      - redis
+    networks:
+      - feedback-network
+
+  # Optional: Redis for caching and task queuing
+  redis:
+    image: redis:7-alpine
+    container_name: feedback-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - feedback-network
+
+  # Optional: Weaviate vector database
+  weaviate:
+    image: semitechnologies/weaviate:latest
+    container_name: feedback-weaviate
+    ports:
+      - "8080:8080"
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
+      DEFAULT_VECTORIZER_MODULE: "none"
+      CLUSTER_HOSTNAME: "node1"
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    restart: unless-stopped
+    networks:
+      - feedback-network
+
+  # Optional: Ollama for local LLMs
+  ollama:
+    image: ollama/ollama:latest
+    container_name: feedback-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - feedback-network
+    # Uncomment if you have NVIDIA GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+volumes:
+  weaviate_data:
+  ollama_data:
+
+networks:
+  feedback-network:
+    driver: bridge

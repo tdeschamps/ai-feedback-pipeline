@@ -1,0 +1,30 @@
+Meeting Transcript - Customer Feedback Session
+========================================
+
+John (Customer): Hi everyone, thanks for setting up this call. I wanted to discuss some issues we've been having with the product.
+
+Sarah (Product Manager): Of course! We really appreciate you taking the time to share your feedback. What's been on your mind?
+
+John: Well, first off, I love the overall concept and the interface is really clean. But there are a few things that have been frustrating. The biggest one is the export functionality. Right now, we can only export to PDF, but we really need Excel export capability. Our finance team needs to manipulate the data, and PDF just doesn't work for that.
+
+Sarah: That's great feedback. We've heard similar requests from other customers too.
+
+John: Another thing - and this might sound minor but it's actually a big deal for us - the search function is really slow. When we have large datasets, it can take 30-40 seconds to return results. That's just too long when you're trying to be productive.
+
+Mike (Developer): Can you tell us more about the size of your datasets?
+
+John: Sure, we typically work with files that have 10,000+ records. Sometimes up to 50,000. The search just crawls with that much data.
+
+Sarah: Understood. What about the user experience in general?
+
+John: Oh, one more thing I almost forgot - it would be amazing if we could save custom filters. Right now, every time I log in, I have to recreate the same filters I use every day. It's probably costing me 10-15 minutes each morning just setting things up the way I like them.
+
+Sarah: Those are all really valuable insights. Is there anything else that's been causing friction?
+
+John: Actually, yes. The mobile app is pretty much unusable on tablets. The layout doesn't scale properly, and half the buttons are too small to tap accurately. We have field workers who need to use this on iPads, and right now they basically can't.
+
+Mike: We appreciate all this feedback. This helps us prioritize our roadmap.
+
+John: Great! Overall, we're happy with the product, but these issues are definitely impacting our workflow. If you could fix the Excel export and the search performance, that would solve our biggest pain points.
+
+Sarah: Perfect. We'll make sure to update you as we work on these improvements.

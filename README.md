@@ -1,0 +1,367 @@
+# 🧠 AI-Powered Feedback Categorization & RAG Pipeline
+
+[![CI/CD](https://github.com/yourusername/ai-feedback-pipeline/workflows/CI/badge.svg)](https://github.com/yourusername/ai-feedback-pipeline/actions)
+[![Code Quality](https://img.shields.io/badge/code%20quality-A-brightgreen)](https://github.com/yourusername/ai-feedback-pipeline)
+[![Coverage](https://img.shields.io/badge/coverage-85%25-green)](https://github.com/yourusername/ai-feedback-pipeline)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Type checked: mypy](https://img.shields.io/badge/type%20checked-mypy-blue)](https://mypy-lang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Docker](https://img.shields.io/badge/docker-ready-blue)](https://www.docker.com/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green)](https://fastapi.tiangolo.com/)
+
+A Python-based pipeline that uses Large Language Models (LLMs) and Retrieval-Augmented Generation (RAG) to automatically extract, categorize, and match customer feedback from Circleback transcripts to existing problems in Notion databases.
+
+## 🎯 Features
+
+- **Multi-LLM Support**: OpenAI GPT-4, Claude, Ollama, Groq, HuggingFace
+- **Feedback Extraction**: Automatically identifies feature requests and customer pains
+- **RAG Matching**: Semantically matches feedback to existing Notion problems
+- **Vector Storage**: Supabase (pgvector) and Weaviate support
+- **Auto-Updates**: Updates Notion problems with matched feedback
+- **CLI & API**: Command-line interface and FastAPI web server
+- **Docker Ready**: Full containerization with docker-compose
+
+## 🚀 Quick Start
+
+### 1. Clone and Setup
+
+```bash
+git clone <repository-url>
+cd ai-feedback-pipeline
+cp .env.example .env
+```
+
+### 2. Configure Environment
+
+Edit `.env` file with your API keys:
+
+```bash
+# LLM Configuration
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4o
+OPENAI_API_KEY=your_openai_key_here
+
+# Vector Store
+VECTOR_STORE=supabase
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_key
+
+# Notion Integration
+NOTION_API_KEY=your_notion_api_key
+NOTION_DATABASE_ID=your_notion_database_id
+```
+
+### 3. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Run Pipeline
+
+```bash
+# Process a single transcript
+python main.py process-transcript data/transcripts/sample_customer_call.txt
+
+# Process all transcripts in a directory
+python main.py batch-process data/transcripts/
+
+# Sync Notion problems
+python main.py sync-problems
+
+# Check status
+python main.py status
+```
+
+## 🧰 Architecture
+
+```
+┌─────────────────┐    ┌──────────────┐    ┌─────────────────┐
+│   Circleback    │───▶│   Extract    │───▶│    Embed &      │
+│   Transcripts   │    │   Feedback   │    │  Vector Store   │
+└─────────────────┘    └──────────────┘    └─────────────────┘
+                              │                      │
+┌─────────────────┐    ┌──────────────┐    ┌─────────────────┐
+│     Notion      │◀───│     RAG      │◀───│   Semantic      │
+│   Problems      │    │   Matching   │    │    Search       │
+└─────────────────┘    └──────────────┘    └─────────────────┘
+```
+
+### Components
+
+- **`extract.py`**: LLM-based feedback extraction and classification
+- **`embed.py`**: Embedding generation and vector store operations
+- **`rag.py`**: RAG-based matching with confidence scoring
+- **`notion.py`**: Notion API integration for reading/updating problems
+- **`llm_client.py`**: Unified LLM interface supporting multiple providers
+- **`pipeline.py`**: High-level orchestration and workflow management
+
+## 📖 Usage Examples
+
+### CLI Usage
+
+```bash
+# Process single transcript with custom ID
+python main.py process-transcript transcript.txt --transcript-id "call-2024-001"
+
+# Batch process with pattern matching
+python main.py batch-process transcripts/ --pattern "*.txt" --output results.json
+
+# Show recent feedbacks
+python main.py show-feedbacks --limit 5
+
+# View configuration
+python main.py status
+```
+
+### API Usage
+
+Start the FastAPI server:
+
+```bash
+python server.py
+# or
+uvicorn server:app --host 0.0.0.0 --port 8000
+```
+
+Process transcript via API:
+
+```bash
+curl -X POST "http://localhost:8000/process/transcript" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transcript_id": "call-001",
+    "content": "Customer mentioned they need Excel export..."
+  }'
+```
+
+### Docker Usage
+
+```bash
+# Build and run with docker-compose
+docker-compose up -d
+
+# Run CLI commands in container
+docker-compose exec feedback-pipeline python main.py status
+
+# View logs
+docker-compose logs -f feedback-pipeline
+```
+
+## 🔧 Configuration
+
+### LLM Providers
+
+#### OpenAI
+```bash
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4o
+OPENAI_API_KEY=your_key
+```
+
+#### Claude (Anthropic)
+```bash
+LLM_PROVIDER=anthropic
+LLM_MODEL=claude-3-sonnet-20240229
+ANTHROPIC_API_KEY=your_key
+```
+
+#### Ollama (Local)
+```bash
+LLM_PROVIDER=ollama
+LLM_MODEL=llama2
+LLM_BASE_URL=http://localhost:11434
+```
+
+#### Groq
+```bash
+LLM_PROVIDER=groq
+LLM_MODEL=mixtral-8x7b-32768
+GROQ_API_KEY=your_key
+```
+
+### Vector Stores
+
+#### Supabase (Recommended)
+```bash
+VECTOR_STORE=supabase
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your_service_role_key
+```
+
+#### Weaviate
+```bash
+VECTOR_STORE=weaviate
+WEAVIATE_URL=http://localhost:8080
+WEAVIATE_API_KEY=your_key  # Optional
+```
+
+### Pipeline Settings
+
+```bash
+CONFIDENCE_THRESHOLD=0.7      # Minimum confidence for auto-updates
+MAX_MATCHES=5                 # Number of candidates to consider
+RERANK_ENABLED=true          # Use LLM for reranking matches
+```
+
+## 📊 Data Flow
+
+### 1. Feedback Extraction
+
+Input transcript → LLM analysis → Structured feedback:
+
+```json
+[
+  {
+    "type": "feature_request",
+    "summary": "Need Excel export functionality",
+    "verbatim": "I really wish you had an Excel export feature",
+    "confidence": 0.9
+  },
+  {
+    "type": "customer_pain",
+    "summary": "Search is too slow with large datasets",
+    "verbatim": "The search is incredibly slow",
+    "confidence": 0.85
+  }
+]
+```
+
+### 2. Vector Matching
+
+Feedback embeddings → Semantic search → Problem candidates → LLM reranking → Best match
+
+### 3. Notion Updates
+
+```
+Problem + Feedback → Notion API → Updated problem with:
+- Appended feedback verbatim
+- Incremented feedback count
+- Updated timestamp
+- Match confidence logged
+```
+
+## 🧪 Testing
+
+```bash
+# Run tests
+pytest tests/
+
+# Run with coverage
+pytest --cov=. tests/
+
+# Run specific test
+pytest tests/test_pipeline.py::TestFeedbackExtractor::test_extract_feedback
+```
+
+## 📈 Monitoring & Metrics
+
+The pipeline tracks:
+
+- **Extraction Rate**: Feedbacks extracted per transcript
+- **Match Rate**: Percentage of feedbacks matched to problems
+- **Confidence Distribution**: High/medium/low confidence matches
+- **Processing Time**: Performance metrics per component
+
+View metrics:
+
+```bash
+# CLI
+python main.py show-feedbacks
+
+# API
+curl http://localhost:8000/metrics
+```
+
+## 🔍 Troubleshooting
+
+### Common Issues
+
+1. **No feedbacks extracted**: Check LLM provider configuration and API keys
+2. **No matches found**: Verify Notion problems are synced and vector store is populated
+3. **Low confidence matches**: Adjust `CONFIDENCE_THRESHOLD` or improve problem descriptions
+4. **Slow processing**: Consider using local LLMs or optimizing batch sizes
+
+### Debug Mode
+
+```bash
+# Enable debug logging
+LOG_LEVEL=DEBUG python main.py process-transcript transcript.txt
+
+# Check vector store status
+python main.py sync-problems --dry-run
+```
+
+### Health Checks
+
+```bash
+# API health check
+curl http://localhost:8000/health
+
+# Configuration check
+curl http://localhost:8000/config
+
+# Docker health
+docker-compose ps
+```
+
+## 🚢 Deployment
+
+### Local Development
+```bash
+python server.py
+```
+
+### Docker Production
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+### Cloud Deployment
+
+The pipeline can be deployed on:
+
+- **Fly.io**: `fly deploy`
+- **Render**: Connect GitHub repo
+- **Railway**: One-click deploy
+- **AWS/GCP/Azure**: Use container services
+
+### Environment Variables for Production
+
+```bash
+# Production settings
+LOG_LEVEL=INFO
+CONFIDENCE_THRESHOLD=0.8
+RERANK_ENABLED=true
+
+# Security
+CORS_ORIGINS=https://yourdomain.com
+API_KEY_REQUIRED=true
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature/amazing-feature`
+3. Make changes and add tests
+4. Run tests: `pytest`
+5. Run linting: `ruff . && black .`
+6. Commit changes: `git commit -m 'Add amazing feature'`
+7. Push to branch: `git push origin feature/amazing-feature`
+8. Open Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙋‍♂️ Support
+
+- **Issues**: GitHub Issues
+- **Discussions**: GitHub Discussions
+- **Email**: support@yourcompany.com
+
+---
+
+Built with ❤️ using Python, LangChain, and modern AI technologies.
