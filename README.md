@@ -1,6 +1,6 @@
 # 🧠 AI-Powered Feedback Categorization & RAG Pipeline
 
-[![CI/CD](https://github.com/tdeschamps/ai-feedback-pipeline/workflows/CI/badge.svg)](https://github.com/yourusername/ai-feedback-pipeline/actions)
+[![CI/CD](https://github.com/tdeschamps/ai-feedback-pipeline/workflows/CI/badge.svg)](https://github.com/tdeschamps/ai-feedback-pipeline/actions)
 [![Code Quality](https://img.shields.io/badge/code%20quality-A-brightgreen)](https://github.com/yourusername/ai-feedback-pipeline)
 [![Coverage](https://img.shields.io/badge/coverage-85%25-green)](https://github.com/yourusername/ai-feedback-pipeline)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
