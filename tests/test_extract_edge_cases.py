@@ -78,33 +78,20 @@ def test_feedback_extractor_initialization():
     """Test FeedbackExtractor initialization variants."""
     print("Testing FeedbackExtractor initialization...")
 
-    mock_modules = {
-        "langchain.schema": Mock(),
-        "langchain_anthropic": Mock(),
-        "langchain_community.embeddings": Mock(),
-        "langchain_community.llms": Mock(),
-        "langchain_openai": Mock(),
-        "chromadb": Mock(),
-        "pinecone": Mock(),
-        "notion_client": Mock(),
-    }
+    with patch("extract.get_llm_client") as mock_get_client:
+        mock_client = Mock()
+        mock_get_client.return_value = mock_client
 
-    with patch.dict("sys.modules", mock_modules):
-        # Test with mocked LLM client before importing
-        with patch("extract.get_llm_client") as mock_get_client:
-            mock_client = Mock()
-            mock_get_client.return_value = mock_client
+        from extract import FeedbackExtractor
 
-            from extract import FeedbackExtractor
+        # Test default initialization
+        extractor = FeedbackExtractor()
+        assert extractor is not None
+        assert hasattr(extractor, "llm_client")
 
-            # Test default initialization
-            extractor = FeedbackExtractor()
-            assert extractor is not None
-            assert hasattr(extractor, "llm_client")
-
-            # Test that mock client is used
-            extractor_with_client = FeedbackExtractor()
-            assert extractor_with_client.llm_client == mock_client
+        # Test that mock client is used
+        extractor_with_client = FeedbackExtractor()
+        assert extractor_with_client.llm_client == mock_client
 
     print("✓ FeedbackExtractor initialization works correctly")
 

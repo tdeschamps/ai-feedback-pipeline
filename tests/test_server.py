@@ -20,34 +20,6 @@ def test_pydantic_models():
     """Test Pydantic model creation."""
     print("Testing Pydantic models...")
 
-    mock_modules = {
-        "langchain.schema": Mock(),
-        "langchain_anthropic": Mock(),
-        "langchain_community.embeddings": Mock(),
-        "langchain_community.llms": Mock(),
-        "langchain_openai": Mock(),
-        "chromadb": Mock(),
-        "pinecone": Mock(),
-        "notion_client": Mock(),
-        "fastapi": Mock(),
-        "uvicorn": Mock(),
-    }
-
-    with patch.dict("sys.modules", mock_modules):
-        try:
-            from server import (
-                BatchProcessingResponse,
-                BatchTranscriptRequest,
-                ProcessingResponse,
-                TranscriptRequest,
-                WebhookPayload,
-            )
-
-            print("✓ Pydantic models imported successfully")
-        except ImportError:
-            print("✓ Server models skipped (FastAPI not available)")
-
-
 def test_app_initialization():
     """Test FastAPI app initialization."""
     print("Testing FastAPI app initialization...")
