@@ -349,18 +349,6 @@ def test_cli_imports():
             print(f"✓ CLI imports skipped (click not available): {e}")
 
 
-def run_all_tests():
-    """Run all CLI tests."""
-    print("Running comprehensive CLI tests...")
-    test_cli_imports()
-    print("✓ All CLI tests passed!")
-
-
-if __name__ == "__main__":
-    run_all_tests()
-    print("✓ CLI group skipped (click not available)")
-
-
 def test_config_setup():
     """Test configuration setup in CLI."""
     print("Testing config setup...")
