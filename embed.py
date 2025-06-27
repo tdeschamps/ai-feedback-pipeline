@@ -121,7 +121,7 @@ class ChromaDBVectorStore(VectorStore):
                 ids=ids,
                 embeddings=embeddings,  # type: ignore
                 metadatas=metadatas,  # type: ignore
-                documents=documents_content
+                documents=documents_content,
             )
 
             logger.info(f"Added {len(documents)} documents to ChromaDB")
