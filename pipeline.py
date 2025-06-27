@@ -1,6 +1,7 @@
 """
 High-level pipeline orchestration for the feedback categorization system.
 """
+
 import asyncio
 import logging
 from datetime import datetime
@@ -15,6 +16,7 @@ from rag import MatchingMetrics, RAGMatcher
 
 
 logger = logging.getLogger(__name__)
+
 
 class FeedbackPipeline:
     """Main pipeline for processing feedback and matching to problems."""
@@ -41,7 +43,7 @@ class FeedbackPipeline:
                     "feedbacks_extracted": 0,
                     "matches_found": 0,
                     "problems_updated": 0,
-                    "status": "no_feedback"
+                    "status": "no_feedback",
                 }
 
             # Step 2: Process each feedback
@@ -52,7 +54,11 @@ class FeedbackPipeline:
 
             # Compile results
             matches_found = sum(1 for _, match in results if match)
-            problems_updated = sum(1 for _, match in results if match and match.confidence >= settings.confidence_threshold)
+            problems_updated = sum(
+                1
+                for _, match in results
+                if match and match.confidence >= settings.confidence_threshold
+            )
 
             return {
                 "transcript_id": transcript_id,
@@ -60,16 +66,12 @@ class FeedbackPipeline:
                 "matches_found": matches_found,
                 "problems_updated": problems_updated,
                 "status": "completed",
-                "results": results
+                "results": results,
             }
 
         except Exception as e:
             logger.error(f"Error processing transcript {transcript_id}: {e}")
-            return {
-                "transcript_id": transcript_id,
-                "error": str(e),
-                "status": "error"
-            }
+            return {"transcript_id": transcript_id, "error": str(e), "status": "error"}
 
     async def process_feedbacks(self, feedbacks: list[Feedback]) -> list[tuple[Feedback, Any]]:
         """Process extracted feedbacks through matching and updating."""
@@ -95,7 +97,9 @@ class FeedbackPipeline:
                         logger.warning(f"Failed to update problem {match.problem_id}")
 
                 elif match:
-                    logger.info(f"Low confidence match ({match.confidence:.3f}) - logging for review")
+                    logger.info(
+                        f"Low confidence match ({match.confidence:.3f}) - logging for review"
+                    )
 
                 else:
                     logger.info(f"No match found for feedback: {feedback.summary[:50]}...")
@@ -146,7 +150,7 @@ class FeedbackPipeline:
             "total_updates": total_updates,
             "success_rate": total_matches / total_feedbacks if total_feedbacks > 0 else 0,
             "results": results,
-            "metrics_file": metrics_file
+            "metrics_file": metrics_file,
         }
 
     async def sync_notion_problems(self) -> bool:
@@ -175,7 +179,9 @@ class FeedbackPipeline:
             logger.error(f"Error syncing Notion problems: {e}")
             return False
 
-    async def _save_processing_logs(self, transcript_id: str, feedbacks: list[Feedback], results: list[tuple[Feedback, Any]]) -> None:
+    async def _save_processing_logs(
+        self, transcript_id: str, feedbacks: list[Feedback], results: list[tuple[Feedback, Any]]
+    ) -> None:
         """Save processing logs for audit trail."""
         try:
             # Save feedback logs
@@ -194,26 +200,31 @@ class FeedbackPipeline:
                         "verbatim": feedback.verbatim,
                         "confidence": feedback.confidence,
                         "transcript_id": feedback.transcript_id,
-                        "timestamp": feedback.timestamp.isoformat()
+                        "timestamp": feedback.timestamp.isoformat(),
                     },
-                    "match": {
-                        "problem_id": match.problem_id if match else None,
-                        "problem_title": match.problem_title if match else None,
-                        "confidence": match.confidence if match else None,
-                        "similarity_score": match.similarity_score if match else None,
-                        "reasoning": match.reasoning if match else None
-                    } if match else None
+                    "match": (
+                        {
+                            "problem_id": match.problem_id if match else None,
+                            "problem_title": match.problem_title if match else None,
+                            "confidence": match.confidence if match else None,
+                            "similarity_score": match.similarity_score if match else None,
+                            "reasoning": match.reasoning if match else None,
+                        }
+                        if match
+                        else None
+                    ),
                 }
                 detailed_results.append(result_data)
 
             results_file = f"data/processing_results_{transcript_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-            with open(results_file, 'w', encoding='utf-8') as f:
+            with open(results_file, "w", encoding="utf-8") as f:
                 json.dump(detailed_results, f, indent=2, ensure_ascii=False)
 
             logger.info(f"Saved processing logs to {results_file}")
 
         except Exception as e:
             logger.error(f"Error saving processing logs: {e}")
+
 
 async def run_pipeline_cli() -> None:
     """CLI runner for the pipeline."""
@@ -242,7 +253,7 @@ async def run_pipeline_cli() -> None:
 
         if args.transcript_file:
             # Process single file
-            with open(args.transcript_file, encoding='utf-8') as f:
+            with open(args.transcript_file, encoding="utf-8") as f:
                 transcript_content = f.read()
 
             transcript_id = args.transcript_id or Path(args.transcript_file).stem
@@ -259,13 +270,10 @@ async def run_pipeline_cli() -> None:
             transcripts = []
 
             for file_path in transcript_dir.glob("*.txt"):
-                with open(file_path, encoding='utf-8') as f:
+                with open(file_path, encoding="utf-8") as f:
                     content = f.read()
 
-                transcripts.append({
-                    "id": file_path.stem,
-                    "content": content
-                })
+                transcripts.append({"id": file_path.stem, "content": content})
 
             if not transcripts:
                 print(f"No .txt files found in {transcript_dir}")
@@ -287,6 +295,7 @@ async def run_pipeline_cli() -> None:
     except Exception as e:
         logger.error(f"Pipeline execution failed: {e}")
         print(f"Error: {e}")
+
 
 if __name__ == "__main__":
     asyncio.run(run_pipeline_cli())

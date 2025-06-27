@@ -1,49 +1,60 @@
-.PHONY: help install test lint format type-check clean run-tests dev-setup
+.PHONY: help install test lint format type-check clean run-tests dev-setup sync
 
 # Default target
 help:
 	@echo "Available commands:"
-	@echo "  install       Install dependencies"
+	@echo "  install       Install dependencies with UV"
 	@echo "  dev-setup     Set up development environment"
-	@echo "  test          Run all tests"
+	@echo "  sync          Sync dependencies (create uv.lock)"
+	@echo "  test          Run basic tests"
+	@echo "  test-comprehensive  Run comprehensive test suite"
 	@echo "  lint          Run linting checks"
-	@echo "  format        Format code with black"
+	@echo "  format        Format code with black and ruff"
 	@echo "  type-check    Run type checking with mypy"
 	@echo "  clean         Clean up cache files"
-	@echo "  run-tests     Run tests with coverage"
+	@echo "  run-tests     Run comprehensive tests (alias)"
 
 # Install dependencies
 install:
-	pip install -r requirements.txt
+	uv sync
+
+# Sync dependencies (create/update uv.lock)
+sync:
+	uv lock
 
 # Development setup
-dev-setup: install
-	@echo "Setting up development environment..."
-	pip install -e .
-	cp .env.example .env
+dev-setup:
+	@echo "Setting up development environment with UV..."
+	uv sync --dev
+	cp .env.example .env || true
 	@echo "Please edit .env file with your API keys"
 
 # Run tests
 test:
-	python -m pytest tests/ -v
+	@echo "Running AI Feedback Pipeline Tests..."
+	uv run python tests/test_simple.py
+
+# Run comprehensive test suite
+test-comprehensive:
+	@echo "Running Comprehensive AI Feedback Pipeline Test Suite..."
+	uv run python test_comprehensive_suite.py
 
 # Run tests with coverage
-run-tests:
-	python -m pytest tests/ -v --cov=. --cov-report=term-missing --cov-report=html
+run-tests: test-comprehensive
 
 # Lint code
 lint:
-	python -m ruff check .
-	python -m ruff format --check .
+	uv run ruff check .
+	uv run ruff format --check .
 
 # Format code
 format:
-	python -m black .
-	python -m ruff format .
+	uv run black .
+	uv run ruff format .
 
 # Type checking
 type-check:
-	python -m mypy .
+	uv run mypy .
 
 # Clean up
 clean:

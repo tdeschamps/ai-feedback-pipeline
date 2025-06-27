@@ -55,23 +55,30 @@ NOTION_DATABASE_ID=your_notion_database_id
 ### 3. Install Dependencies
 
 ```bash
-pip install -r requirements.txt
+# Install UV (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install project dependencies
+uv sync
+
+# For development dependencies
+uv sync --dev
 ```
 
 ### 4. Run Pipeline
 
 ```bash
 # Process a single transcript
-python main.py process-transcript data/transcripts/sample_customer_call.txt
+uv run python main.py process-transcript data/transcripts/sample_customer_call.txt
 
 # Process all transcripts in a directory
-python main.py batch-process data/transcripts/
+uv run python main.py batch-process data/transcripts/
 
 # Sync Notion problems
-python main.py sync-problems
+uv run python main.py sync-problems
 
 # Check status
-python main.py status
+uv run python main.py status
 ```
 
 ## 🧰 Architecture
@@ -103,16 +110,16 @@ python main.py status
 
 ```bash
 # Process single transcript with custom ID
-python main.py process-transcript transcript.txt --transcript-id "call-2024-001"
+uv run python main.py process-transcript transcript.txt --transcript-id "call-2024-001"
 
 # Batch process with pattern matching
-python main.py batch-process transcripts/ --pattern "*.txt" --output results.json
+uv run python main.py batch-process transcripts/ --pattern "*.txt" --output results.json
 
 # Show recent feedbacks
-python main.py show-feedbacks --limit 5
+uv run python main.py show-feedbacks --limit 5
 
 # View configuration
-python main.py status
+uv run python main.py status
 ```
 
 ### API Usage
@@ -120,9 +127,9 @@ python main.py status
 Start the FastAPI server:
 
 ```bash
-python server.py
+uv run python server.py
 # or
-uvicorn server:app --host 0.0.0.0 --port 8000
+uv run uvicorn server:app --host 0.0.0.0 --port 8000
 ```
 
 Process transcript via API:
@@ -143,7 +150,7 @@ curl -X POST "http://localhost:8000/process/transcript" \
 docker-compose up -d
 
 # Run CLI commands in container
-docker-compose exec feedback-pipeline python main.py status
+docker-compose exec feedback-pipeline uv run python main.py status
 
 # View logs
 docker-compose logs -f feedback-pipeline
@@ -208,7 +215,7 @@ PINECONE_INDEX_NAME=feedback-pipeline
 
 ```bash
 # Install ChromaDB
-pip install chromadb
+uv add chromadb
 
 # ChromaDB will create a local database automatically
 VECTOR_STORE=chromadb
@@ -219,7 +226,7 @@ CHROMADB_PERSIST_DIRECTORY=./chroma_db
 
 ```bash
 # Install Pinecone
-pip install pinecone-client
+uv add pinecone-client
 
 # Get API key from https://www.pinecone.io/
 VECTOR_STORE=pinecone
@@ -285,13 +292,13 @@ Problem + Feedback → Notion API → Updated problem with:
 
 ```bash
 # Run tests
-pytest tests/
+uv run pytest tests/
 
 # Run with coverage
-pytest --cov=. tests/
+uv run pytest --cov=. tests/
 
 # Run specific test
-pytest tests/test_pipeline.py::TestFeedbackExtractor::test_extract_feedback
+uv run pytest tests/test_pipeline.py::TestFeedbackExtractor::test_extract_feedback
 ```
 
 ## 📈 Monitoring & Metrics
@@ -307,7 +314,7 @@ View metrics:
 
 ```bash
 # CLI
-python main.py show-feedbacks
+uv run python main.py show-feedbacks
 
 # API
 curl http://localhost:8000/metrics
@@ -326,10 +333,10 @@ curl http://localhost:8000/metrics
 
 ```bash
 # Enable debug logging
-LOG_LEVEL=DEBUG python main.py process-transcript transcript.txt
+LOG_LEVEL=DEBUG uv run python main.py process-transcript transcript.txt
 
 # Check vector store status
-python main.py sync-problems --dry-run
+uv run python main.py sync-problems --dry-run
 ```
 
 ### Health Checks
@@ -348,11 +355,13 @@ docker-compose ps
 ## 🚢 Deployment
 
 ### Local Development
+
 ```bash
-python server.py
+uv run python server.py
 ```
 
 ### Docker Production
+
 ```bash
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
@@ -384,8 +393,8 @@ API_KEY_REQUIRED=true
 1. Fork the repository
 2. Create feature branch: `git checkout -b feature/amazing-feature`
 3. Make changes and add tests
-4. Run tests: `pytest`
-5. Run linting: `ruff . && black .`
+4. Run tests: `uv run pytest`
+5. Run linting: `uv run ruff . && uv run black .`
 6. Commit changes: `git commit -m 'Add amazing feature'`
 7. Push to branch: `git push origin feature/amazing-feature`
 8. Open Pull Request

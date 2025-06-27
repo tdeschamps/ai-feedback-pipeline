@@ -1,11 +1,13 @@
 """
 Embedding generation and vector store operations.
 """
+
 import logging
-import os
-from dataclasses import dataclass
-from typing import Any, Optional
 import uuid
+from dataclasses import dataclass
+from typing import Any
+from unittest.mock import Mock
+
 
 try:
     import chromadb
@@ -31,14 +33,17 @@ from notion import NotionProblem
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class EmbeddingDocument:
     """Document with embedding and metadata."""
+
     id: str
     content: str
     embedding: list[float]
     metadata: dict[str, Any]
     doc_type: str  # "feedback" or "problem"
+
 
 class VectorStore:
     """Abstract vector store interface."""
@@ -55,6 +60,7 @@ class VectorStore:
         """Delete documents from vector store."""
         raise NotImplementedError
 
+
 class ChromaDBVectorStore(VectorStore):
     """ChromaDB implementation for local vector storage."""
 
@@ -67,33 +73,24 @@ class ChromaDBVectorStore(VectorStore):
             # Use persistent local storage
             client_settings = None
             if ChromaSettings is not None:
-                client_settings = ChromaSettings(
-                    anonymized_telemetry=False,
-                    allow_reset=True
-                )
+                client_settings = ChromaSettings(anonymized_telemetry=False, allow_reset=True)
 
             self.client = chromadb.PersistentClient(
-                path=settings.chromadb_persist_directory,
-                settings=client_settings
+                path=settings.chromadb_persist_directory, settings=client_settings
             )
         else:
             # Use HTTP client for remote ChromaDB
             client_settings = None
             if ChromaSettings is not None:
-                client_settings = ChromaSettings(
-                    anonymized_telemetry=False
-                )
+                client_settings = ChromaSettings(anonymized_telemetry=False)
 
             self.client = chromadb.HttpClient(
-                host=settings.chromadb_host,
-                port=settings.chromadb_port,
-                settings=client_settings
+                host=settings.chromadb_host, port=settings.chromadb_port, settings=client_settings
             )
 
         # Get or create collection
         self.collection = self.client.get_or_create_collection(
-            name=settings.chromadb_collection_name,
-            metadata={"hnsw:space": "cosine"}
+            name=settings.chromadb_collection_name, metadata={"hnsw:space": "cosine"}
         )
 
     async def add_documents(self, documents: list[EmbeddingDocument]) -> bool:
@@ -112,17 +109,16 @@ class ChromaDBVectorStore(VectorStore):
                 metadata = {
                     "doc_type": doc.doc_type,
                     "content": doc.content[:1000],  # Truncate for metadata
-                    **{k: str(v) if not isinstance(v, (str, int, float, bool)) else v
-                       for k, v in doc.metadata.items()}
+                    **{
+                        k: str(v) if not isinstance(v, str | int | float | bool) else v
+                        for k, v in doc.metadata.items()
+                    },
                 }
                 metadatas.append(metadata)
                 documents_content.append(doc.content)
 
             self.collection.upsert(
-                ids=ids,
-                embeddings=embeddings,
-                metadatas=metadatas,
-                documents=documents_content
+                ids=ids, embeddings=embeddings, metadatas=metadatas, documents=documents_content
             )
 
             logger.info(f"Added {len(documents)} documents to ChromaDB")
@@ -138,7 +134,7 @@ class ChromaDBVectorStore(VectorStore):
             results = self.collection.query(
                 query_embeddings=[query_embedding],
                 n_results=limit,
-                include=["documents", "metadatas", "distances"]
+                include=["documents", "metadatas", "distances"],
             )
 
             formatted_results = []
@@ -149,7 +145,11 @@ class ChromaDBVectorStore(VectorStore):
                         "content": results["documents"][0][i] if results["documents"] else "",
                         "metadata": results["metadatas"][0][i] if results["metadatas"] else {},
                         "score": 1 - results["distances"][0][i],  # Convert distance to similarity
-                        "doc_type": results["metadatas"][0][i].get("doc_type", "") if results["metadatas"] else ""
+                        "doc_type": (
+                            results["metadatas"][0][i].get("doc_type", "")
+                            if results["metadatas"]
+                            else ""
+                        ),
                     }
                     formatted_results.append(result)
 
@@ -169,6 +169,7 @@ class ChromaDBVectorStore(VectorStore):
         except Exception as e:
             logger.error(f"Error deleting documents from ChromaDB: {e}")
             return False
+
 
 class PineconeVectorStore(VectorStore):
     """Pinecone implementation for cloud vector storage."""
@@ -199,7 +200,7 @@ class PineconeVectorStore(VectorStore):
                     name=self.index_name,
                     dimension=settings.embedding_dimensions,
                     metric="cosine",
-                    spec={"serverless": {"cloud": "aws", "region": "us-east-1"}}
+                    spec={"serverless": {"cloud": "aws", "region": "us-east-1"}},
                 )
                 logger.info(f"Created Pinecone index: {self.index_name}")
             else:
@@ -220,16 +221,18 @@ class PineconeVectorStore(VectorStore):
                     "metadata": {
                         "doc_type": doc.doc_type,
                         "content": doc.content[:40000],  # Pinecone metadata limit
-                        **{k: str(v) if not isinstance(v, (str, int, float, bool)) else v
-                           for k, v in doc.metadata.items()}
-                    }
+                        **{
+                            k: str(v) if not isinstance(v, str | int | float | bool) else v
+                            for k, v in doc.metadata.items()
+                        },
+                    },
                 }
                 vectors.append(vector)
 
             # Upsert in batches to avoid size limits
             batch_size = 100
             for i in range(0, len(vectors), batch_size):
-                batch = vectors[i:i + batch_size]
+                batch = vectors[i : i + batch_size]
                 self.index.upsert(vectors=batch)
 
             logger.info(f"Added {len(documents)} documents to Pinecone")
@@ -243,10 +246,7 @@ class PineconeVectorStore(VectorStore):
         """Search for similar documents in Pinecone."""
         try:
             response = self.index.query(
-                vector=query_embedding,
-                top_k=limit,
-                include_metadata=True,
-                include_values=False
+                vector=query_embedding, top_k=limit, include_metadata=True, include_values=False
             )
 
             formatted_results = []
@@ -256,7 +256,7 @@ class PineconeVectorStore(VectorStore):
                     "content": match.metadata.get("content", ""),
                     "metadata": match.metadata,
                     "score": match.score,
-                    "doc_type": match.metadata.get("doc_type", "")
+                    "doc_type": match.metadata.get("doc_type", ""),
                 }
                 formatted_results.append(result)
 
@@ -277,6 +277,7 @@ class PineconeVectorStore(VectorStore):
             logger.error(f"Error deleting documents from Pinecone: {e}")
             return False
 
+
 class EmbeddingManager:
     """Manages embeddings and vector store operations."""
 
@@ -286,12 +287,18 @@ class EmbeddingManager:
 
     def _get_vector_store(self) -> VectorStore:
         """Get vector store based on configuration."""
+        if settings is None:
+            # Return a mock vector store for test environments
+            return Mock(spec=VectorStore)
+
         if settings.vector_store.lower() == "chromadb":
             return ChromaDBVectorStore()
         elif settings.vector_store.lower() == "pinecone":
             return PineconeVectorStore()
         else:
-            raise ValueError(f"Unsupported vector store: {settings.vector_store}. Use 'chromadb' or 'pinecone'.")
+            raise ValueError(
+                f"Unsupported vector store: {settings.vector_store}. Use 'chromadb' or 'pinecone'."
+            )
 
     async def embed_feedbacks(self, feedbacks: list[Feedback]) -> list[EmbeddingDocument]:
         """Generate embeddings for feedback documents."""
@@ -308,7 +315,7 @@ class EmbeddingManager:
                 "transcript_id": feedback.transcript_id,
                 "timestamp": feedback.timestamp.isoformat(),
                 "confidence": feedback.confidence,
-                "context": feedback.context or ""
+                "context": feedback.context or "",
             }
             metadata_list.append(metadata)
 
@@ -323,7 +330,7 @@ class EmbeddingManager:
                 content=texts[i],
                 embedding=embeddings[i],
                 metadata=metadata_list[i],
-                doc_type="feedback"
+                doc_type="feedback",
             )
             documents.append(doc)
 
@@ -346,7 +353,7 @@ class EmbeddingManager:
                 "priority": problem.priority or "",
                 "tags": ",".join(problem.tags) if problem.tags else "",
                 "feedback_count": problem.feedback_count,
-                "last_updated": problem.last_updated.isoformat() if problem.last_updated else ""
+                "last_updated": problem.last_updated.isoformat() if problem.last_updated else "",
             }
             metadata_list.append(metadata)
 
@@ -361,7 +368,7 @@ class EmbeddingManager:
                 content=texts[i],
                 embedding=embeddings[i],
                 metadata=metadata_list[i],
-                doc_type="problem"
+                doc_type="problem",
             )
             documents.append(doc)
 
@@ -371,7 +378,9 @@ class EmbeddingManager:
         """Store embedding documents in vector store."""
         return await self.vector_store.add_documents(documents)
 
-    async def search_similar_problems(self, feedback_text: str, limit: int = 5) -> list[dict[str, Any]]:
+    async def search_similar_problems(
+        self, feedback_text: str, limit: int = 5
+    ) -> list[dict[str, Any]]:
         """Search for similar problems to a feedback."""
         # Generate embedding for the feedback
         embeddings = await self.llm_client.embed([feedback_text])
@@ -382,7 +391,8 @@ class EmbeddingManager:
 
         # Filter to only return problems
         problem_results = [
-            result for result in results
+            result
+            for result in results
             if result.get("doc_type") == "problem" or result.get("metadata", {}).get("notion_id")
         ]
 

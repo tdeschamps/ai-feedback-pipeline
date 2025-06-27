@@ -1,6 +1,7 @@
 """
 RAG (Retrieval-Augmented Generation) module for matching feedback to problems.
 """
+
 import logging
 from dataclasses import dataclass
 from typing import Any
@@ -13,15 +14,18 @@ from llm_client import get_llm_client
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class MatchResult:
     """Result of matching feedback to a problem."""
+
     problem_id: str
     problem_title: str
     confidence: float
     similarity_score: float
     reasoning: str
     metadata: dict[str, Any]
+
 
 class RAGMatcher:
     """RAG-based feedback to problem matching."""
@@ -71,8 +75,7 @@ If no problem has confidence >= 0.6, set best_match to null."""
             # Step 1: Semantic search for candidate problems
             feedback_text = f"{feedback.summary}\n\n{feedback.verbatim}"
             candidates = await self.embedding_manager.search_similar_problems(
-                feedback_text,
-                limit=settings.max_matches
+                feedback_text, limit=settings.max_matches
             )
 
             if not candidates:
@@ -99,7 +102,9 @@ If no problem has confidence >= 0.6, set best_match to null."""
             logger.error(f"Error finding match for feedback: {e}")
             return None
 
-    async def _llm_rerank(self, feedback: Feedback, candidates: list[dict[str, Any]]) -> MatchResult | None:
+    async def _llm_rerank(
+        self, feedback: Feedback, candidates: list[dict[str, Any]]
+    ) -> MatchResult | None:
         """Use LLM to rerank and select best match."""
         try:
             # Prepare candidate information for LLM
@@ -108,7 +113,7 @@ If no problem has confidence >= 0.6, set best_match to null."""
                 metadata = candidate.get("metadata", {})
                 similarity = candidate.get("certainty", candidate.get("similarity", 0))
 
-                candidates_text += f"\n=== CANDIDATE {i+1} ===\n"
+                candidates_text += f"\n=== CANDIDATE {i + 1} ===\n"
                 candidates_text += f"ID: {metadata.get('notion_id', 'unknown')}\n"
                 candidates_text += f"Title: {metadata.get('title', 'No title')}\n"
                 candidates_text += f"Status: {metadata.get('status', 'Unknown')}\n"
@@ -119,7 +124,9 @@ If no problem has confidence >= 0.6, set best_match to null."""
             # Prepare the prompt
             messages = [
                 {"role": "system", "content": self.rerank_prompt},
-                {"role": "user", "content": f"""
+                {
+                    "role": "user",
+                    "content": f"""
 FEEDBACK TO MATCH:
 Type: {feedback.type}
 Summary: {feedback.summary}
@@ -129,7 +136,8 @@ Confidence: {feedback.confidence}
 CANDIDATE PROBLEMS:
 {candidates_text}
 
-Please analyze and return your matching assessment as JSON."""}
+Please analyze and return your matching assessment as JSON.""",
+                },
             ]
 
             response = await self.llm_client.generate(messages)
@@ -141,14 +149,16 @@ Please analyze and return your matching assessment as JSON."""}
             logger.error(f"Error in LLM reranking: {e}")
             return None
 
-    def _parse_rerank_response(self, response: str, candidates: list[dict[str, Any]]) -> MatchResult | None:
+    def _parse_rerank_response(
+        self, response: str, candidates: list[dict[str, Any]]
+    ) -> MatchResult | None:
         """Parse LLM reranking response."""
         try:
             import json
 
             # Extract JSON from response
-            start_idx = response.find('{')
-            end_idx = response.rfind('}') + 1
+            start_idx = response.find("{")
+            end_idx = response.rfind("}") + 1
 
             if start_idx == -1 or end_idx == 0:
                 logger.warning("No JSON found in rerank response")
@@ -175,7 +185,9 @@ Please analyze and return your matching assessment as JSON."""}
                 return None
 
             metadata = matching_candidate.get("metadata", {})
-            similarity = matching_candidate.get("certainty", matching_candidate.get("similarity", 0))
+            similarity = matching_candidate.get(
+                "certainty", matching_candidate.get("similarity", 0)
+            )
 
             return MatchResult(
                 problem_id=problem_id,
@@ -183,14 +195,16 @@ Please analyze and return your matching assessment as JSON."""}
                 confidence=best_match["confidence"],
                 similarity_score=similarity,
                 reasoning=best_match.get("reasoning", ""),
-                metadata=metadata
+                metadata=metadata,
             )
 
         except Exception as e:
             logger.error(f"Error parsing rerank response: {e}")
             return None
 
-    async def _use_top_match(self, feedback: Feedback, candidates: list[dict[str, Any]]) -> MatchResult | None:
+    async def _use_top_match(
+        self, feedback: Feedback, candidates: list[dict[str, Any]]
+    ) -> MatchResult | None:
         """Use top semantic match without LLM reranking."""
         if not candidates:
             return None
@@ -208,10 +222,12 @@ Please analyze and return your matching assessment as JSON."""}
             confidence=confidence,
             similarity_score=similarity,
             reasoning="Top semantic match (no LLM reranking)",
-            metadata=metadata
+            metadata=metadata,
         )
 
-    async def batch_match(self, feedbacks: list[Feedback]) -> list[tuple[Feedback, MatchResult | None]]:
+    async def batch_match(
+        self, feedbacks: list[Feedback]
+    ) -> list[tuple[Feedback, MatchResult | None]]:
         """Match multiple feedbacks to problems."""
         results = []
 
@@ -224,6 +240,7 @@ Please analyze and return your matching assessment as JSON."""}
 
         return results
 
+
 class MatchingMetrics:
     """Track and analyze matching performance."""
 
@@ -234,16 +251,13 @@ class MatchingMetrics:
     def add_result(self, feedback: Feedback, match: MatchResult | None) -> None:
         """Add a matching result."""
         if match:
-            self.matches.append({
-                "feedback": feedback,
-                "match": match,
-                "timestamp": feedback.timestamp.isoformat()
-            })
+            self.matches.append(
+                {"feedback": feedback, "match": match, "timestamp": feedback.timestamp.isoformat()}
+            )
         else:
-            self.unmatched.append({
-                "feedback": feedback,
-                "timestamp": feedback.timestamp.isoformat()
-            })
+            self.unmatched.append(
+                {"feedback": feedback, "timestamp": feedback.timestamp.isoformat()}
+            )
 
     def get_statistics(self) -> dict[str, Any]:
         """Get matching statistics."""
@@ -273,7 +287,7 @@ class MatchingMetrics:
             "unmatched": len(self.unmatched),
             "match_rate": match_rate,
             "avg_confidence": avg_confidence,
-            "confidence_distribution": confidence_buckets
+            "confidence_distribution": confidence_buckets,
         }
 
     def save_metrics(self, filepath: str) -> None:
@@ -287,7 +301,7 @@ class MatchingMetrics:
                     "feedback_summary": match["feedback"].summary,
                     "problem_title": match["match"].problem_title,
                     "confidence": match["match"].confidence,
-                    "timestamp": match["timestamp"]
+                    "timestamp": match["timestamp"],
                 }
                 for match in self.matches
             ],
@@ -295,13 +309,13 @@ class MatchingMetrics:
                 {
                     "feedback_summary": item["feedback"].summary,
                     "feedback_type": item["feedback"].type,
-                    "timestamp": item["timestamp"]
+                    "timestamp": item["timestamp"],
                 }
                 for item in self.unmatched
-            ]
+            ],
         }
 
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
 
         logger.info(f"Saved matching metrics to {filepath}")

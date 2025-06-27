@@ -1,6 +1,7 @@
 """
 Main CLI entry point for the AI Feedback Categorization Pipeline.
 """
+
 import asyncio
 import json
 import logging
@@ -18,10 +19,13 @@ logger = logging.getLogger(__name__)
 
 
 @click.group()
-@click.option('--log-level', default='INFO', help='Logging level',
-              type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']))
-@click.option('--config', help='Path to configuration file',
-              type=click.Path(exists=True))
+@click.option(
+    "--log-level",
+    default="INFO",
+    help="Logging level",
+    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]),
+)
+@click.option("--config", help="Path to configuration file", type=click.Path(exists=True))
 @click.pass_context
 def cli(ctx: click.Context, log_level: str, config: str | None) -> None:
     """AI-Powered Feedback Categorization & RAG Pipeline."""
@@ -33,8 +37,8 @@ def cli(ctx: click.Context, log_level: str, config: str | None) -> None:
     logging.getLogger().setLevel(getattr(logging, log_level.upper()))
 
     # Store config in context
-    ctx.obj['log_level'] = log_level
-    ctx.obj['config'] = config
+    ctx.obj["log_level"] = log_level
+    ctx.obj["config"] = config
 
     if config:
         click.echo(f"📁 Loading config from {config}")
@@ -42,12 +46,12 @@ def cli(ctx: click.Context, log_level: str, config: str | None) -> None:
 
 
 @cli.command()
-@click.argument('transcript_file', type=click.Path(exists=True, path_type=Path))
-@click.option('--transcript-id', help='Custom transcript ID')
-@click.option('--output', help='Output file for results',
-              type=click.Path(path_type=Path))
-def process_transcript(transcript_file: Path, transcript_id: str | None,
-                      output: Path | None) -> None:
+@click.argument("transcript_file", type=click.Path(exists=True, path_type=Path))
+@click.option("--transcript-id", help="Custom transcript ID")
+@click.option("--output", help="Output file for results", type=click.Path(path_type=Path))
+def process_transcript(
+    transcript_file: Path, transcript_id: str | None, output: Path | None
+) -> None:
     """Process a single transcript file."""
     try:
         # Validate file
@@ -61,7 +65,7 @@ def process_transcript(transcript_file: Path, transcript_id: str | None,
 
         # Read transcript
         try:
-            content = transcript_file.read_text(encoding='utf-8')
+            content = transcript_file.read_text(encoding="utf-8")
         except UnicodeDecodeError as e:
             click.echo(f"❌ Cannot read transcript file (encoding issue): {e}", err=True)
             sys.exit(1)
@@ -102,9 +106,9 @@ async def _process_transcript_async(content: str, transcript_id: str) -> dict[st
 
 def _display_processing_result(result: dict[str, Any], transcript_id: str) -> None:
     """Display processing results in a user-friendly format."""
-    status = result.get('status', 'unknown')
+    status = result.get("status", "unknown")
 
-    if status == 'error':
+    if status == "error":
         click.echo(f"❌ Processing failed for transcript: {transcript_id}")
         click.echo(f"   Error: {result.get('error', 'Unknown error')}")
         return
@@ -116,9 +120,9 @@ def _display_processing_result(result: dict[str, Any], transcript_id: str) -> No
     click.echo(f"   📈 Status: {status}")
 
     # Show warnings if any
-    if result.get('feedbacks_extracted', 0) == 0:
+    if result.get("feedbacks_extracted", 0) == 0:
         click.echo("   ⚠️  No feedback was extracted from this transcript")
-    elif result.get('matches_found', 0) == 0:
+    elif result.get("matches_found", 0) == 0:
         click.echo("   ⚠️  No matches found - feedback may be too unique")
 
 
@@ -126,16 +130,17 @@ def _save_results(result: dict[str, Any], output_path: Path) -> None:
     """Save processing results to file."""
     try:
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        with output_path.open('w', encoding='utf-8') as f:
+        with output_path.open("w", encoding="utf-8") as f:
             json.dump(result, f, indent=2, default=str, ensure_ascii=False)
     except Exception as e:
         logger.error(f"Failed to save results: {e}")
         raise
 
+
 @cli.command()
-@click.argument('transcript_dir', type=click.Path(exists=True, file_okay=False))
-@click.option('--pattern', default='*.txt', help='File pattern to match')
-@click.option('--output', help='Output file for batch results')
+@click.argument("transcript_dir", type=click.Path(exists=True, file_okay=False))
+@click.option("--pattern", default="*.txt", help="File pattern to match")
+@click.option("--output", help="Output file for batch results")
 async def batch_process(transcript_dir: str, pattern: str, output: str) -> None:
     """Process all transcripts in a directory."""
     try:
@@ -154,13 +159,10 @@ async def batch_process(transcript_dir: str, pattern: str, output: str) -> None:
         transcripts = []
         for file_path in transcript_files:
             try:
-                with open(file_path, encoding='utf-8') as f:
+                with open(file_path, encoding="utf-8") as f:
                     content = f.read()
 
-                transcripts.append({
-                    "id": file_path.stem,
-                    "content": content
-                })
+                transcripts.append({"id": file_path.stem, "content": content})
             except Exception as e:
                 click.echo(f"⚠️  Warning: Could not read {file_path}: {e}")
 
@@ -184,13 +186,14 @@ async def batch_process(transcript_dir: str, pattern: str, output: str) -> None:
 
         # Save results if requested
         if output:
-            with open(output, 'w') as f:
+            with open(output, "w") as f:
                 json.dump(result, f, indent=2, default=str)
             click.echo(f"   💾 Results saved to: {output}")
 
     except Exception as e:
         click.echo(f"❌ Error: {e}", err=True)
         raise
+
 
 @cli.command()
 async def sync_problems() -> None:
@@ -210,9 +213,10 @@ async def sync_problems() -> None:
         click.echo(f"❌ Error: {e}", err=True)
         raise
 
+
 @cli.command()
-@click.option('--feedbacks-file', help='Path to feedback logs JSON file')
-@click.option('--limit', default=10, help='Number of recent feedbacks to show')
+@click.option("--feedbacks-file", help="Path to feedback logs JSON file")
+@click.option("--limit", default=10, help="Number of recent feedbacks to show")
 def show_feedbacks(feedbacks_file: str, limit: int) -> None:
     """Show recent extracted feedbacks."""
     try:
@@ -251,11 +255,14 @@ def show_feedbacks(feedbacks_file: str, limit: int) -> None:
             click.echo(f"   📅 Time: {feedback.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
             click.echo(f"   🎯 Confidence: {feedback.confidence:.2f}")
             click.echo(f"   📝 Summary: {feedback.summary}")
-            click.echo(f"   💬 Verbatim: \"{feedback.verbatim[:100]}{'...' if len(feedback.verbatim) > 100 else ''}\"")
+            click.echo(
+                f'   💬 Verbatim: "{feedback.verbatim[:100]}{"..." if len(feedback.verbatim) > 100 else ""}"'
+            )
             click.echo()
 
     except Exception as e:
         click.echo(f"❌ Error: {e}", err=True)
+
 
 @cli.command()
 def status() -> None:
@@ -286,12 +293,16 @@ def status() -> None:
     else:
         click.echo("\n📁 Data Directory: Not found (will be created)")
 
+
 # Wrapper functions to handle async commands
 def async_command(f: Any) -> Any:
     """Decorator to handle async click commands."""
+
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         return asyncio.run(f(*args, **kwargs))
+
     return wrapper
+
 
 # Apply async wrapper to async commands
 process_transcript = click.command()(async_command(process_transcript))

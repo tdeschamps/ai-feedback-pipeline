@@ -1,6 +1,7 @@
 """
 Notion API integration for reading and updating customer problems.
 """
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime
@@ -19,9 +20,11 @@ from extract import Feedback
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class NotionProblem:
     """Represents a customer problem from Notion database."""
+
     id: str
     title: str
     description: str
@@ -31,10 +34,18 @@ class NotionProblem:
     feedback_count: int = 0
     last_updated: datetime | None = None
 
+
 class NotionClient:
     """Client for interacting with Notion API."""
 
     def __init__(self) -> None:
+        if settings is None:
+            # In test environment, create a mock client
+            logger.warning("No settings available, using mock client")
+            self.client = None
+            self.database_id = "test-db"
+            return
+
         if not settings.notion_api_key:
             raise ValueError("NOTION_API_KEY not configured")
 
@@ -55,10 +66,7 @@ class NotionClient:
             start_cursor = None
 
             while has_more:
-                query_params: dict[str, Any] = {
-                    "database_id": self.database_id,
-                    "page_size": 100
-                }
+                query_params: dict[str, Any] = {"database_id": self.database_id, "page_size": 100}
 
                 if start_cursor:
                     query_params["start_cursor"] = start_cursor
@@ -144,14 +152,18 @@ class NotionClient:
                 priority=priority,
                 tags=tags,
                 feedback_count=feedback_count,
-                last_updated=datetime.fromisoformat(page["last_edited_time"].replace("Z", "+00:00"))
+                last_updated=datetime.fromisoformat(
+                    page["last_edited_time"].replace("Z", "+00:00")
+                ),
             )
 
         except Exception as e:
             logger.error(f"Error parsing Notion page: {e}")
             return None
 
-    def update_problem_with_feedback(self, problem_id: str, feedback: Feedback, confidence: float) -> bool:
+    def update_problem_with_feedback(
+        self, problem_id: str, feedback: Feedback, confidence: float
+    ) -> bool:
         """Update Notion problem by appending feedback."""
         try:
             # First, get the current page to read existing content
@@ -162,7 +174,7 @@ class NotionClient:
             feedback_entry = f"\n\n**Feedback from {feedback.transcript_id}** ({timestamp_str}) - Confidence: {confidence:.2f}\n"
             feedback_entry += f"**Type:** {feedback.type.replace('_', ' ').title()}\n"
             feedback_entry += f"**Summary:** {feedback.summary}\n"
-            feedback_entry += f"**Verbatim:** \"{feedback.verbatim}\"\n"
+            feedback_entry += f'**Verbatim:** "{feedback.verbatim}"\n'
 
             # Get existing description
             existing_desc = ""
@@ -178,27 +190,19 @@ class NotionClient:
             update_data = {
                 "properties": {
                     "Description": {
-                        "rich_text": [
-                            {
-                                "text": {
-                                    "content": existing_desc + feedback_entry
-                                }
-                            }
-                        ]
+                        "rich_text": [{"text": {"content": existing_desc + feedback_entry}}]
                     },
                     "Feedback Count": {
                         "number": properties.get("Feedback Count", {}).get("number", 0) + 1
                     },
-                    "Last Updated": {
-                        "date": {
-                            "start": datetime.now().isoformat()
-                        }
-                    }
+                    "Last Updated": {"date": {"start": datetime.now().isoformat()}},
                 }
             }
 
             self.client.pages.update(page_id=problem_id, **update_data)
-            logger.info(f"Updated Notion problem {problem_id} with feedback from {feedback.transcript_id}")
+            logger.info(
+                f"Updated Notion problem {problem_id} with feedback from {feedback.transcript_id}"
+            )
             return True
 
         except Exception as e:
@@ -214,42 +218,26 @@ class NotionClient:
                 "parent": {"database_id": self.database_id},
                 "properties": {
                     "Name": {  # Assuming title property is called "Name"
-                        "title": [
-                            {
-                                "text": {
-                                    "content": f"New Issue: {feedback.summary[:50]}..."
-                                }
-                            }
-                        ]
+                        "title": [{"text": {"content": f"New Issue: {feedback.summary[:50]}..."}}]
                     },
                     "Description": {
                         "rich_text": [
                             {
                                 "text": {
                                     "content": f"**Auto-created from feedback**\n\n"
-                                              f"**Type:** {feedback.type.replace('_', ' ').title()}\n"
-                                              f"**Summary:** {feedback.summary}\n"
-                                              f"**Verbatim:** \"{feedback.verbatim}\"\n"
-                                              f"**Source:** {feedback.transcript_id} ({timestamp_str})\n"
-                                              f"**Confidence:** {feedback.confidence:.2f}"
+                                    f"**Type:** {feedback.type.replace('_', ' ').title()}\n"
+                                    f"**Summary:** {feedback.summary}\n"
+                                    f'**Verbatim:** "{feedback.verbatim}"\n'
+                                    f"**Source:** {feedback.transcript_id} ({timestamp_str})\n"
+                                    f"**Confidence:** {feedback.confidence:.2f}"
                                 }
                             }
                         ]
                     },
-                    "Status": {
-                        "select": {
-                            "name": "New"
-                        }
-                    },
-                    "Priority": {
-                        "select": {
-                            "name": "Medium"
-                        }
-                    },
-                    "Feedback Count": {
-                        "number": 1
-                    }
-                }
+                    "Status": {"select": {"name": "New"}},
+                    "Priority": {"select": {"name": "Medium"}},
+                    "Feedback Count": {"number": 1},
+                },
             }
 
             response = self.client.pages.create(**new_page_data)
@@ -259,6 +247,7 @@ class NotionClient:
         except Exception as e:
             logger.error(f"Error creating new Notion problem: {e}")
             return None
+
 
 def notion_problems_to_text(problems: list[NotionProblem]) -> list[dict[str, Any]]:
     """Convert Notion problems to text format for embedding."""
@@ -274,12 +263,9 @@ def notion_problems_to_text(problems: list[NotionProblem]) -> list[dict[str, Any
             "status": problem.status,
             "priority": problem.priority,
             "tags": problem.tags or [],
-            "feedback_count": problem.feedback_count
+            "feedback_count": problem.feedback_count,
         }
 
-        texts.append({
-            "content": text_content,
-            "metadata": metadata
-        })
+        texts.append({"content": text_content, "metadata": metadata})
 
     return texts

@@ -2,23 +2,23 @@
 """
 Simple test script to verify ChromaDB and Pinecone vector stores work.
 """
+
 import asyncio
 import os
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
+
 
 # Set environment variables to avoid API key errors
 os.environ["OPENAI_API_KEY"] = "test-key"
 
-from embed import ChromaDBVectorStore, PineconeVectorStore, EmbeddingDocument
+from embed import ChromaDBVectorStore, EmbeddingDocument, PineconeVectorStore
 
 
 async def test_chromadb_basic():
     """Test ChromaDB basic functionality with mocks."""
     print("Testing ChromaDB...")
 
-    with patch('embed.chromadb') as mock_chromadb, \
-         patch('embed.settings') as mock_settings:
-
+    with patch("embed.chromadb") as mock_chromadb, patch("embed.settings") as mock_settings:
         # Configure settings
         mock_settings.chromadb_host = "localhost"
         mock_settings.chromadb_port = 8000
@@ -42,7 +42,7 @@ async def test_chromadb_basic():
                 content="This is a test document",
                 embedding=[0.1, 0.2, 0.3],
                 metadata={"type": "test"},
-                doc_type="feedback"
+                doc_type="feedback",
             )
         ]
 
@@ -54,7 +54,7 @@ async def test_chromadb_basic():
             "ids": [["test-doc-1"]],
             "documents": [["This is a test document"]],
             "metadatas": [[{"type": "test", "doc_type": "feedback"}]],
-            "distances": [[0.1]]
+            "distances": [[0.1]],
         }
 
         search_results = await store.search([0.1, 0.2, 0.3], limit=1)
@@ -67,9 +67,7 @@ async def test_pinecone_basic():
     """Test Pinecone basic functionality with mocks."""
     print("Testing Pinecone...")
 
-    with patch('embed.Pinecone') as mock_pinecone_class, \
-         patch('embed.settings') as mock_settings:
-
+    with patch("embed.Pinecone") as mock_pinecone_class, patch("embed.settings") as mock_settings:
         # Configure settings
         mock_settings.pinecone_api_key = "test-api-key"
         mock_settings.pinecone_index_name = "test-index"
@@ -95,7 +93,7 @@ async def test_pinecone_basic():
                 content="This is a test document",
                 embedding=[0.1] * 1536,  # Match embedding dimensions
                 metadata={"type": "test"},
-                doc_type="problem"
+                doc_type="problem",
             )
         ]
 
@@ -106,7 +104,11 @@ async def test_pinecone_basic():
         mock_match = Mock()
         mock_match.id = "test-doc-1"
         mock_match.score = 0.95
-        mock_match.metadata = {"type": "test", "doc_type": "problem", "content": "This is a test document"}
+        mock_match.metadata = {
+            "type": "test",
+            "doc_type": "problem",
+            "content": "This is a test document",
+        }
 
         mock_response = Mock()
         mock_response.matches = [mock_match]
@@ -130,6 +132,7 @@ async def main():
     except Exception as e:
         print(f"❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
 
 

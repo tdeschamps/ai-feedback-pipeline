@@ -3,15 +3,20 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies and UV
 RUN apt-get update && apt-get install -y \
   gcc \
   g++ \
-  && rm -rf /var/lib/apt/lists/*
+  curl \
+  && rm -rf /var/lib/apt/lists/* \
+  && curl -LsSf https://astral.sh/uv/install.sh | sh \
+  && mv /root/.cargo/bin/uv /usr/local/bin/
 
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy project files
+COPY pyproject.toml uv.lock* ./
+
+# Install dependencies with UV
+RUN uv sync --frozen --no-dev
 
 # Copy application code
 COPY . .
@@ -22,9 +27,10 @@ RUN mkdir -p data/transcripts
 # Set environment variables
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
+ENV UV_SYSTEM_PYTHON=1
 
 # Expose port for FastAPI server
 EXPOSE 8000
 
 # Default command (can be overridden)
-CMD ["python", "main.py", "status"]
+CMD ["uv", "run", "python", "main.py", "status"]

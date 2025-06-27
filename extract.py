@@ -1,6 +1,7 @@
 """
 Feedback extraction and classification from Circleback transcripts.
 """
+
 import json
 import logging
 from dataclasses import dataclass
@@ -17,6 +18,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Feedback:
     """Structured feedback extracted from transcript."""
+
     type: str  # "feature_request" or "customer_pain"
     summary: str
     verbatim: str
@@ -80,7 +82,10 @@ Return your response as a valid JSON array of feedback objects. If no feedback i
         try:
             messages = [
                 {"role": "system", "content": self.extraction_prompt},
-                {"role": "user", "content": f"Analyze this customer transcript and extract feedback:\n\n{transcript}"}
+                {
+                    "role": "user",
+                    "content": f"Analyze this customer transcript and extract feedback:\n\n{transcript}",
+                },
             ]
 
             response = await self.llm_client.generate(messages)
@@ -96,7 +101,7 @@ Return your response as a valid JSON array of feedback objects. If no feedback i
                     confidence=item.get("confidence", 0.0),
                     transcript_id=transcript_id,
                     timestamp=datetime.now(),
-                    context=item.get("context")
+                    context=item.get("context"),
                 )
 
                 # Validate feedback
@@ -105,7 +110,9 @@ Return your response as a valid JSON array of feedback objects. If no feedback i
                 else:
                     logger.warning(f"Invalid feedback extracted: {feedback}")
 
-            logger.info(f"Extracted {len(feedbacks)} valid feedbacks from transcript {transcript_id}")
+            logger.info(
+                f"Extracted {len(feedbacks)} valid feedbacks from transcript {transcript_id}"
+            )
             return feedbacks
 
         except Exception as e:
@@ -116,8 +123,8 @@ Return your response as a valid JSON array of feedback objects. If no feedback i
         """Parse LLM response into structured feedback data."""
         try:
             # Try to extract JSON from response
-            start_idx = response.find('[')
-            end_idx = response.rfind(']') + 1
+            start_idx = response.find("[")
+            end_idx = response.rfind("]") + 1
 
             if start_idx == -1 or end_idx == 0:
                 logger.warning("No JSON array found in response")
@@ -150,8 +157,10 @@ Return your response as a valid JSON array of feedback objects. If no feedback i
                 return False
 
             # Length validation
-            if (len(feedback.summary.strip()) < self._min_summary_length or
-                len(feedback.verbatim.strip()) < self._min_verbatim_length):
+            if (
+                len(feedback.summary.strip()) < self._min_summary_length
+                or len(feedback.verbatim.strip()) < self._min_verbatim_length
+            ):
                 logger.debug("Content too short")
                 return False
 
@@ -169,8 +178,15 @@ Return your response as a valid JSON array of feedback objects. If no feedback i
     def _is_generic_feedback(self, feedback: Feedback) -> bool:
         """Check if feedback is too generic or low quality."""
         generic_phrases = [
-            "good job", "nice work", "thank you", "thanks",
-            "great", "awesome", "perfect", "ok", "okay"
+            "good job",
+            "nice work",
+            "thank you",
+            "thanks",
+            "great",
+            "awesome",
+            "perfect",
+            "ok",
+            "okay",
         ]
 
         summary_lower = feedback.summary.lower()
@@ -197,8 +213,11 @@ Return your response as a valid JSON array of feedback objects. If no feedback i
             feedbacks = await self.extract_feedback(transcript_text, transcript_id)
             all_feedbacks.extend(feedbacks)
 
-        logger.info(f"Extracted {len(all_feedbacks)} total feedbacks from {len(transcripts)} transcripts")
+        logger.info(
+            f"Extracted {len(all_feedbacks)} total feedbacks from {len(transcripts)} transcripts"
+        )
         return all_feedbacks
+
 
 def save_feedback_logs(feedbacks: list[Feedback], filepath: str | Path) -> bool:
     """Save extracted feedbacks to JSON log file with error handling."""
@@ -221,14 +240,14 @@ def save_feedback_logs(feedbacks: list[Feedback], filepath: str | Path) -> bool:
                     "confidence": feedback.confidence,
                     "transcript_id": feedback.transcript_id,
                     "timestamp": feedback.timestamp.isoformat(),
-                    "context": feedback.context
+                    "context": feedback.context,
                 }
                 feedback_data.append(feedback_dict)
             except Exception as e:
                 logger.error(f"Error serializing feedback: {e}")
                 continue
 
-        with open(file_path, 'w', encoding='utf-8') as f:
+        with open(file_path, "w", encoding="utf-8") as f:
             json.dump(feedback_data, f, indent=2, ensure_ascii=False)
 
         logger.info(f"Saved {len(feedback_data)} feedbacks to {filepath}")
@@ -247,7 +266,7 @@ def load_feedback_logs(filepath: str | Path) -> list[Feedback]:
             logger.warning(f"Feedback log file not found: {filepath}")
             return []
 
-        with open(file_path, encoding='utf-8') as f:
+        with open(file_path, encoding="utf-8") as f:
             feedback_data = json.load(f)
 
         if not isinstance(feedback_data, list):
@@ -264,7 +283,7 @@ def load_feedback_logs(filepath: str | Path) -> list[Feedback]:
                     confidence=item["confidence"],
                     transcript_id=item["transcript_id"],
                     timestamp=datetime.fromisoformat(item["timestamp"]),
-                    context=item.get("context")
+                    context=item.get("context"),
                 )
                 feedbacks.append(feedback)
             except (KeyError, ValueError, TypeError) as e:
