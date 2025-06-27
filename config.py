@@ -52,10 +52,6 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     log_file: str = "pipeline.log"
 
-    # Logging
-    log_level: str = "INFO"
-    log_file: str = "pipeline.log"
-
     model_config = {"env_file": ".env", "case_sensitive": False}
 
 

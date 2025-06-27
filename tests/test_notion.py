@@ -7,6 +7,7 @@ import sys
 from datetime import datetime
 from unittest.mock import Mock, patch
 
+
 # Add project to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -176,8 +177,8 @@ def test_notion_problem_updating():
                 mock_client_instance.pages.update.return_value = {"id": "page-1"}
                 mock_notion_class.return_value = mock_client_instance
 
-                import notion
                 import extract
+                import notion
 
                 client = notion.NotionClient()
 

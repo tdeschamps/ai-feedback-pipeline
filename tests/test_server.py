@@ -4,7 +4,8 @@ Tests for server.py - FastAPI server endpoints.
 
 import os
 import sys
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
+
 
 # Add project to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -35,10 +36,10 @@ def test_pydantic_models():
     with patch.dict("sys.modules", mock_modules):
         try:
             from server import (
-                TranscriptRequest,
+                BatchProcessingResponse,
                 BatchTranscriptRequest,
                 ProcessingResponse,
-                BatchProcessingResponse,
+                TranscriptRequest,
                 WebhookPayload,
             )
 
@@ -159,7 +160,7 @@ def test_batch_processing_model():
 
     with patch.dict("sys.modules", mock_modules):
         try:
-            from server import BatchTranscriptRequest, BatchProcessingResponse, ProcessingResponse
+            from server import BatchProcessingResponse, BatchTranscriptRequest, ProcessingResponse
 
             # Test batch request
             batch_request = BatchTranscriptRequest(
