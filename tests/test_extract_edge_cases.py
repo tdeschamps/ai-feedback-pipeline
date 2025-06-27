@@ -42,7 +42,7 @@ def test_feedback_dataclass_edge_cases():
             verbatim="Test verbatim",
             confidence=0.5,
             transcript_id="test",
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
         )
         assert minimal_feedback.type == "feature_request"
         assert minimal_feedback.summary == "Test summary"
@@ -55,7 +55,7 @@ def test_feedback_dataclass_edge_cases():
             confidence=0.8,
             transcript_id="test",
             timestamp=datetime.now(),
-            context=None
+            context=None,
         )
         assert feedback_with_nones.context is None
 
@@ -67,7 +67,7 @@ def test_feedback_dataclass_edge_cases():
             confidence=0.9,
             transcript_id="test",
             timestamp=datetime.now(),
-            context="complex context with details"
+            context="complex context with details",
         )
         assert complex_feedback.context == "complex context with details"
 
@@ -144,6 +144,7 @@ def test_empty_transcript_handling():
             assert result == []
 
         import asyncio
+
         asyncio.run(run_test())
 
     print("✓ Empty transcript handling works correctly")
@@ -178,6 +179,7 @@ def test_malformed_llm_response_handling():
             assert isinstance(result, list)
 
         import asyncio
+
         asyncio.run(run_test())
 
     print("✓ Malformed LLM response handling works correctly")
@@ -221,6 +223,7 @@ def test_transcript_preprocessing():
             assert isinstance(result, list)
 
         import asyncio
+
         asyncio.run(run_test())
 
     print("✓ Transcript preprocessing works correctly")
@@ -246,16 +249,16 @@ def test_feedback_validation():
 
         # Test invalid feedback types
         try:
-            invalid_feedback = Feedback(
+            Feedback(
                 type="invalid_type",
                 summary="Test",
                 verbatim="Test verbatim",
                 confidence=0.5,
                 transcript_id="test",
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
             # Should raise ValueError
-            assert False, "Should have raised ValueError for invalid type"
+            raise AssertionError("Should have raised ValueError for invalid type")
         except ValueError:
             # Expected behavior
             pass
@@ -268,7 +271,7 @@ def test_feedback_validation():
             verbatim="Test verbatim",
             confidence=0.5,
             transcript_id="test",
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
         )
         assert len(long_feedback.summary) == 1000
 
@@ -300,7 +303,7 @@ def test_save_feedback_logs():
                 verbatim="Customer wants this feature",
                 confidence=0.9,
                 transcript_id="test-1",
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             ),
             Feedback(
                 type="customer_pain",
@@ -308,8 +311,8 @@ def test_save_feedback_logs():
                 verbatim="Customer is frustrated with this",
                 confidence=0.8,
                 transcript_id="test-2",
-                timestamp=datetime.now()
-            )
+                timestamp=datetime.now(),
+            ),
         ]
 
         # Test saving logs (should handle file operations gracefully)
@@ -345,16 +348,14 @@ def test_concurrent_extraction():
             # Test multiple concurrent extractions
             import asyncio
 
-            tasks = [
-                extractor.extract_feedback(f"transcript {i}", f"id-{i}")
-                for i in range(5)
-            ]
+            tasks = [extractor.extract_feedback(f"transcript {i}", f"id-{i}") for i in range(5)]
 
             results = await asyncio.gather(*tasks)
             assert len(results) == 5
             assert all(isinstance(result, list) for result in results)
 
         import asyncio
+
         asyncio.run(run_test())
 
     print("✓ Concurrent extraction works correctly")

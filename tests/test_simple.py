@@ -20,8 +20,9 @@ def test_config_loads():
     """Test configuration loads."""
     print("Testing config loading...")
     import config
+
     # In test environment, settings might be None, which is expected
-    assert hasattr(config, 'settings')  # Check the attribute exists
+    assert hasattr(config, "settings")  # Check the attribute exists
     print("✓ Config module loads successfully")
 
 

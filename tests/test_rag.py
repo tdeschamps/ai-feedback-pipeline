@@ -66,21 +66,20 @@ def test_rag_matcher_initialization():
         "notion_client": Mock(),
     }
 
-    with patch.dict("sys.modules", mock_modules):
-        with patch("config.settings") as mock_settings:
-            mock_settings.vector_store = "chromadb"
-            mock_settings.llm_provider = "openai"
+    with patch.dict("sys.modules", mock_modules), patch("config.settings") as mock_settings:
+        mock_settings.vector_store = "chromadb"
+        mock_settings.llm_provider = "openai"
 
-            with patch("embed.chromadb"), patch("rag.get_llm_client") as mock_get_llm:
-                mock_llm = Mock()
-                mock_get_llm.return_value = mock_llm
+        with patch("embed.chromadb"), patch("rag.get_llm_client") as mock_get_llm:
+            mock_llm = Mock()
+            mock_get_llm.return_value = mock_llm
 
-                import rag
+            import rag
 
-                matcher = rag.RAGMatcher()
-                assert matcher is not None
-                assert hasattr(matcher, "llm_client")
-                assert hasattr(matcher, "embedding_manager")
+            matcher = rag.RAGMatcher()
+            assert matcher is not None
+            assert hasattr(matcher, "llm_client")
+            assert hasattr(matcher, "embedding_manager")
 
     print("✓ RAGMatcher initialization works")
 
@@ -127,13 +126,14 @@ def test_matching_metrics():
 
         # Test adding matches (use add_result method which exists)
         from extract import Feedback
+
         test_feedback = Feedback(
             type="feature_request",
             summary="Test feedback",
             verbatim="Test verbatim",
             confidence=0.9,
             transcript_id="test-123",
-            timestamp=match1.metadata.get("timestamp") if match1.metadata else datetime.now()
+            timestamp=match1.metadata.get("timestamp") if match1.metadata else datetime.now(),
         )
         metrics.add_result(test_feedback, match1)
         metrics.add_result(test_feedback, match2)
@@ -162,26 +162,25 @@ def test_rag_confidence_scoring():
         "notion_client": Mock(),
     }
 
-    with patch.dict("sys.modules", mock_modules):
-        with patch("config.settings") as mock_settings:
-            mock_settings.vector_store = "chromadb"
-            mock_settings.matching_confidence_threshold = 0.75
-            mock_settings.llm_provider = "openai"  # Add this
+    with patch.dict("sys.modules", mock_modules), patch("config.settings") as mock_settings:
+        mock_settings.vector_store = "chromadb"
+        mock_settings.matching_confidence_threshold = 0.75
+        mock_settings.llm_provider = "openai"  # Add this
 
-            with patch("embed.chromadb"), patch("rag.get_llm_client"):
-                import rag
+        with patch("embed.chromadb"), patch("rag.get_llm_client"):
+            import rag
 
-                matcher = rag.RAGMatcher()
+            matcher = rag.RAGMatcher()
 
-            # Test that the matcher was created successfully
-            assert matcher is not None
-            assert hasattr(matcher, "llm_client")
-            assert hasattr(matcher, "embedding_manager")
+        # Test that the matcher was created successfully
+        assert matcher is not None
+        assert hasattr(matcher, "llm_client")
+        assert hasattr(matcher, "embedding_manager")
 
-            # Test rerank prompt building
-            prompt = matcher._build_rerank_prompt()
-            assert "confidence" in prompt
-            assert "JSON" in prompt
+        # Test rerank prompt building
+        prompt = matcher._build_rerank_prompt()
+        assert "confidence" in prompt
+        assert "JSON" in prompt
 
     print("✓ RAG confidence scoring works")
 

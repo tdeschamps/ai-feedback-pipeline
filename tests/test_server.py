@@ -68,6 +68,7 @@ def test_app_initialization():
     with patch.dict("sys.modules", mock_modules):
         try:
             from server import app
+
             assert app is not None
             print("✓ FastAPI app initializes successfully")
         except ImportError:
@@ -101,6 +102,7 @@ def test_pipeline_dependency():
                 assert hasattr(pipeline, "process_transcript")
 
             import asyncio
+
             asyncio.run(run_test())
             print("✓ Pipeline dependency works correctly")
         except ImportError:
@@ -132,7 +134,7 @@ def test_webhook_payload_model():
                 event_type="transcript_ready",
                 transcript_id="test-id",
                 transcript_content="test content",
-                metadata={"source": "test"}
+                metadata={"source": "test"},
             )
             assert payload.event_type == "transcript_ready"
             assert payload.transcript_id == "test-id"
@@ -166,9 +168,9 @@ def test_batch_processing_model():
             batch_request = BatchTranscriptRequest(
                 transcripts=[
                     {"id": "test-1", "content": "content 1"},
-                    {"id": "test-2", "content": "content 2"}
+                    {"id": "test-2", "content": "content 2"},
                 ],
-                metadata={"batch": "test"}
+                metadata={"batch": "test"},
             )
             assert len(batch_request.transcripts) == 2
 
@@ -178,7 +180,7 @@ def test_batch_processing_model():
                 feedbacks_extracted=1,
                 matches_found=1,
                 problems_updated=1,
-                status="success"
+                status="success",
             )
 
             batch_response = BatchProcessingResponse(
@@ -188,7 +190,7 @@ def test_batch_processing_model():
                 total_updates=2,
                 success_rate=1.0,
                 processing_time=1.5,
-                results=[individual_response]
+                results=[individual_response],
             )
             assert batch_response.total_transcripts == 2
             assert batch_response.success_rate == 1.0

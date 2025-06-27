@@ -107,13 +107,13 @@ def sample_embedding_documents():
             content="This is a test feedback about feature requests",
             embedding=[0.1, 0.2, 0.3, 0.4, 0.5],
             metadata={"type": "feedback", "category": "feature_request"},
-            doc_type="feedback"
+            doc_type="feedback",
         ),
         EmbeddingDocument(
             id="test-2",
             content="This is a test problem description",
             embedding=[0.2, 0.3, 0.4, 0.5, 0.6],
             metadata={"type": "problem", "priority": "high"},
-            doc_type="problem"
-        )
+            doc_type="problem",
+        ),
     ]

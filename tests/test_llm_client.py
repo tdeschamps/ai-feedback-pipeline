@@ -139,7 +139,7 @@ def test_get_llm_client_unsupported():
 
         try:
             llm_client.get_llm_client()
-            assert False, "Should have raised ValueError"
+            raise AssertionError("Should have raised ValueError")
         except ValueError as e:
             assert "Unsupported LLM provider" in str(e)
 

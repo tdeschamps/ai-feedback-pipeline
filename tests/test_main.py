@@ -35,6 +35,7 @@ def test_cli_imports():
     with patch.dict("sys.modules", mock_modules):
         try:
             import main
+
             assert main is not None
             print("✓ CLI imports successfully")
         except ImportError as e:
@@ -60,6 +61,7 @@ def test_cli_group_creation():
     with patch.dict("sys.modules", mock_modules):
         try:
             from main import cli
+
             assert cli is not None
             print("✓ CLI group created successfully")
         except ImportError:
@@ -85,6 +87,7 @@ def test_config_setup():
     with patch.dict("sys.modules", mock_modules):
         try:
             import main
+
             # Test that main module has the expected structure
             assert hasattr(main, "cli")
             print("✓ Config setup works correctly")
@@ -108,24 +111,23 @@ def test_pipeline_initialization_in_cli():
         "click": Mock(),
     }
 
-    with patch.dict("sys.modules", mock_modules):
-        with patch("config.settings") as mock_settings:
-            # Mock all required settings
-            mock_settings.notion_api_key = "test-key"
-            mock_settings.notion_database_id = "test-db"
-            mock_settings.llm_provider = "openai"
-            mock_settings.vector_store = "chromadb"
+    with patch.dict("sys.modules", mock_modules), patch("config.settings") as mock_settings:
+        # Mock all required settings
+        mock_settings.notion_api_key = "test-key"
+        mock_settings.notion_database_id = "test-db"
+        mock_settings.llm_provider = "openai"
+        mock_settings.vector_store = "chromadb"
 
-            try:
-                from pipeline import FeedbackPipeline
+        try:
+            from pipeline import FeedbackPipeline
 
-                # Test that pipeline can be created in CLI context
-                pipeline = FeedbackPipeline()
-                assert pipeline is not None
-                assert hasattr(pipeline, "process_transcript")
-                print("✓ Pipeline initialization in CLI works correctly")
-            except ImportError:
-                print("✓ Pipeline in CLI skipped (dependencies not available)")
+            # Test that pipeline can be created in CLI context
+            pipeline = FeedbackPipeline()
+            assert pipeline is not None
+            assert hasattr(pipeline, "process_transcript")
+            print("✓ Pipeline initialization in CLI works correctly")
+        except ImportError:
+            print("✓ Pipeline in CLI skipped (dependencies not available)")
 
 
 def test_logging_setup():
@@ -152,6 +154,7 @@ def test_logging_setup():
             setup_logging()
 
             import logging
+
             logger = logging.getLogger(__name__)
             assert logger is not None
             print("✓ Logging setup works correctly")

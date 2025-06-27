@@ -19,9 +19,9 @@ def run_test_module(module_name, test_function_name="run_all_tests"):
     try:
         module = __import__(f"tests.{module_name}", fromlist=[test_function_name])
         test_function = getattr(module, test_function_name)
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Running {module_name}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         test_function()
         return True
     except Exception as e:
@@ -64,7 +64,11 @@ def run_comprehensive_tests():
     print("=" * 80)
     print(f"✅ Modules passed: {passed}")
     print(f"❌ Modules failed: {failed}")
-    print(f"📈 Success rate: {passed/(passed+failed)*100:.1f}%" if (passed+failed) > 0 else "No tests run")
+    print(
+        f"📈 Success rate: {passed / (passed + failed) * 100:.1f}%"
+        if (passed + failed) > 0
+        else "No tests run"
+    )
 
     if failed == 0:
         print("\n🎉 ALL TEST MODULES PASSED! 🎉")

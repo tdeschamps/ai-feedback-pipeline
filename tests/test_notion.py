@@ -54,20 +54,19 @@ def test_notion_client_initialization():
         "notion_client": Mock(),
     }
 
-    with patch.dict("sys.modules", mock_modules):
-        with patch("config.settings") as mock_settings:
-            mock_settings.notion_api_key = "test-key"
-            mock_settings.notion_database_id = "test-db-id"
+    with patch.dict("sys.modules", mock_modules), patch("config.settings") as mock_settings:
+        mock_settings.notion_api_key = "test-key"
+        mock_settings.notion_database_id = "test-db-id"
 
-            with patch("notion.NotionClientClass") as mock_notion_class:
-                mock_client_instance = Mock()
-                mock_notion_class.return_value = mock_client_instance
+        with patch("notion.NotionClientClass") as mock_notion_class:
+            mock_client_instance = Mock()
+            mock_notion_class.return_value = mock_client_instance
 
-                import notion
+            import notion
 
-                client = notion.NotionClient()
-                assert client is not None
-                assert hasattr(client, "client")
+            client = notion.NotionClient()
+            assert client is not None
+            assert hasattr(client, "client")
 
     print("✓ NotionClient initialization works")
 
@@ -80,19 +79,18 @@ def test_notion_client_missing_config():
         "notion_client": Mock(),
     }
 
-    with patch.dict("sys.modules", mock_modules):
-        with patch("config.settings") as mock_settings:
-            mock_settings.notion_api_key = None
-            mock_settings.notion_database_id = "test-db"
+    with patch.dict("sys.modules", mock_modules), patch("config.settings") as mock_settings:
+        mock_settings.notion_api_key = None
+        mock_settings.notion_database_id = "test-db"
 
-            with patch("notion.NotionClientClass", None):
-                import notion
+        with patch("notion.NotionClientClass", None):
+            import notion
 
-                try:
-                    notion.NotionClient()
-                    assert False, "Should have raised ValueError"
-                except ValueError as e:
-                    assert "NOTION_API_KEY not configured" in str(e)
+            try:
+                notion.NotionClient()
+                raise AssertionError("Should have raised ValueError")
+            except ValueError as e:
+                assert "NOTION_API_KEY not configured" in str(e)
 
     print("✓ Missing config handling works")
 
@@ -105,45 +103,53 @@ def test_notion_problem_fetching():
         "notion_client": Mock(),
     }
 
-    with patch.dict("sys.modules", mock_modules):
-        with patch("config.settings") as mock_settings:
-            mock_settings.notion_api_key = "test-key"
-            mock_settings.notion_database_id = "test-db-id"
+    with patch.dict("sys.modules", mock_modules), patch("config.settings") as mock_settings:
+        mock_settings.notion_api_key = "test-key"
+        mock_settings.notion_database_id = "test-db-id"
 
-            # Mock Notion API response
-            mock_response = {
-                "results": [
-                    {
-                        "id": "page-1",
-                        "properties": {
-                            "Title": {"type": "title", "title": [{"text": {"content": "Export Feature"}}]},
-                            "Description": {"type": "rich_text", "rich_text": [{"text": {"content": "Export functionality"}}]},
-                            "Status": {"type": "select", "select": {"name": "New"}},
-                            "Priority": {"type": "select", "select": {"name": "High"}},
-                            "Tags": {"type": "multi_select", "multi_select": [{"name": "export"}, {"name": "feature"}]},
-                            "Feedback Count": {"type": "number", "number": 2},
+        # Mock Notion API response
+        mock_response = {
+            "results": [
+                {
+                    "id": "page-1",
+                    "properties": {
+                        "Title": {
+                            "type": "title",
+                            "title": [{"text": {"content": "Export Feature"}}],
                         },
-                        "last_edited_time": "2024-01-01T00:00:00.000Z",
-                    }
-                ],
-                "has_more": False,
-                "next_cursor": None,
-            }
+                        "Description": {
+                            "type": "rich_text",
+                            "rich_text": [{"text": {"content": "Export functionality"}}],
+                        },
+                        "Status": {"type": "select", "select": {"name": "New"}},
+                        "Priority": {"type": "select", "select": {"name": "High"}},
+                        "Tags": {
+                            "type": "multi_select",
+                            "multi_select": [{"name": "export"}, {"name": "feature"}],
+                        },
+                        "Feedback Count": {"type": "number", "number": 2},
+                    },
+                    "last_edited_time": "2024-01-01T00:00:00.000Z",
+                }
+            ],
+            "has_more": False,
+            "next_cursor": None,
+        }
 
-            with patch("notion.NotionClientClass") as mock_notion_class:
-                mock_client_instance = Mock()
-                mock_client_instance.databases.query.return_value = mock_response
-                mock_notion_class.return_value = mock_client_instance
+        with patch("notion.NotionClientClass") as mock_notion_class:
+            mock_client_instance = Mock()
+            mock_client_instance.databases.query.return_value = mock_response
+            mock_notion_class.return_value = mock_client_instance
 
-                import notion
+            import notion
 
-                client = notion.NotionClient()
-                problems = client.get_all_problems()
+            client = notion.NotionClient()
+            problems = client.get_all_problems()
 
-                assert len(problems) == 1
-                assert problems[0].title == "Export Feature"
-                assert problems[0].priority == "High"
-                assert "export" in problems[0].tags
+            assert len(problems) == 1
+            assert problems[0].title == "Export Feature"
+            assert problems[0].priority == "High"
+            assert "export" in problems[0].tags
 
     print("✓ Notion problem fetching works")
 
@@ -156,49 +162,48 @@ def test_notion_problem_updating():
         "notion_client": Mock(),
     }
 
-    with patch.dict("sys.modules", mock_modules):
-        with patch("config.settings") as mock_settings:
-            mock_settings.notion_api_key = "test-key"
-            mock_settings.notion_database_id = "test-db-id"
+    with patch.dict("sys.modules", mock_modules), patch("config.settings") as mock_settings:
+        mock_settings.notion_api_key = "test-key"
+        mock_settings.notion_database_id = "test-db-id"
 
-            with patch("notion.NotionClientClass") as mock_notion_class:
-                mock_client_instance = Mock()
-                # Mock the retrieve method to return a page with properties
-                mock_client_instance.pages.retrieve.return_value = {
-                    "properties": {
-                        "Description": {
-                            "type": "rich_text",
-                            "rich_text": [{"text": {"content": "Existing description"}}]
-                        },
-                        "Feedback Count": {"number": 1}
-                    }
+        with patch("notion.NotionClientClass") as mock_notion_class:
+            mock_client_instance = Mock()
+            # Mock the retrieve method to return a page with properties
+            mock_client_instance.pages.retrieve.return_value = {
+                "properties": {
+                    "Description": {
+                        "type": "rich_text",
+                        "rich_text": [{"text": {"content": "Existing description"}}],
+                    },
+                    "Feedback Count": {"number": 1},
                 }
-                # Mock the update method to succeed
-                mock_client_instance.pages.update.return_value = {"id": "page-1"}
-                mock_notion_class.return_value = mock_client_instance
+            }
+            # Mock the update method to succeed
+            mock_client_instance.pages.update.return_value = {"id": "page-1"}
+            mock_notion_class.return_value = mock_client_instance
 
-                import extract
-                import notion
+            import extract
+            import notion
 
-                client = notion.NotionClient()
+            client = notion.NotionClient()
 
-                # Create test feedback
-                feedback = extract.Feedback(
-                    type="feature_request",
-                    summary="Need Excel export",
-                    verbatim="Customer really wants Excel export",
-                    confidence=0.9,
-                    transcript_id="call-123",
-                    timestamp=datetime.now(),
-                    context="Customer call",
-                )
+            # Create test feedback
+            feedback = extract.Feedback(
+                type="feature_request",
+                summary="Need Excel export",
+                verbatim="Customer really wants Excel export",
+                confidence=0.9,
+                transcript_id="call-123",
+                timestamp=datetime.now(),
+                context="Customer call",
+            )
 
-                # Test update
-                success = client.update_problem_with_feedback("page-1", feedback, 0.85)
-                assert success is True
+            # Test update
+            success = client.update_problem_with_feedback("page-1", feedback, 0.85)
+            assert success is True
 
-                # Verify the API was called
-                mock_client_instance.pages.update.assert_called_once()
+            # Verify the API was called
+            mock_client_instance.pages.update.assert_called_once()
 
     print("✓ Notion problem updating works")
 
