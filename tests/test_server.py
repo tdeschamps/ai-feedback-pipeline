@@ -20,6 +20,7 @@ def test_pydantic_models():
     """Test Pydantic model creation."""
     print("Testing Pydantic models...")
 
+
 def test_app_initialization():
     """Test FastAPI app initialization."""
     print("Testing FastAPI app initialization...")
