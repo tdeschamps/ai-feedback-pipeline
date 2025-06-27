@@ -60,7 +60,7 @@ try:
     settings = Settings()
 except Exception:
     # Fallback for test environments without proper config
-    settings = None
+    settings = None  # type: ignore
 
 
 def setup_logging() -> None:

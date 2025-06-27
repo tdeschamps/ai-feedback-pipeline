@@ -55,8 +55,8 @@ class NotionClient:
         if NotionClientClass is None:
             raise ImportError("notion-client package not installed")
 
-        self.client = NotionClientClass(auth=settings.notion_api_key)
-        self.database_id = settings.notion_database_id
+        self.client = NotionClientClass(auth=settings.notion_api_key)  # type: ignore
+        self.database_id = settings.notion_database_id  # type: ignore
 
     def get_all_problems(self) -> list[NotionProblem]:
         """Retrieve all customer problems from Notion database."""
@@ -66,12 +66,12 @@ class NotionClient:
             start_cursor = None
 
             while has_more:
-                query_params: dict[str, Any] = {"database_id": self.database_id, "page_size": 100}
+                query_params: dict[str, Any] = {"database_id": self.database_id, "page_size": 100}  # type: ignore
 
                 if start_cursor:
                     query_params["start_cursor"] = start_cursor
 
-                response = self.client.databases.query(**query_params)
+                response = self.client.databases.query(**query_params)  # type: ignore
 
                 for page in response["results"]:
                     problem = self._parse_notion_page(page)
@@ -167,7 +167,7 @@ class NotionClient:
         """Update Notion problem by appending feedback."""
         try:
             # First, get the current page to read existing content
-            page = self.client.pages.retrieve(page_id=problem_id)
+            page = self.client.pages.retrieve(page_id=problem_id)  # type: ignore
 
             # Prepare feedback entry
             timestamp_str = feedback.timestamp.strftime("%Y-%m-%d %H:%M:%S")
@@ -199,7 +199,7 @@ class NotionClient:
                 }
             }
 
-            self.client.pages.update(page_id=problem_id, **update_data)
+            self.client.pages.update(page_id=problem_id, **update_data)  # type: ignore
             logger.info(
                 f"Updated Notion problem {problem_id} with feedback from {feedback.transcript_id}"
             )
@@ -215,7 +215,7 @@ class NotionClient:
             timestamp_str = feedback.timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
             new_page_data = {
-                "parent": {"database_id": self.database_id},
+                "parent": {"database_id": self.database_id},  # type: ignore
                 "properties": {
                     "Name": {  # Assuming title property is called "Name"
                         "title": [{"text": {"content": f"New Issue: {feedback.summary[:50]}..."}}]
@@ -240,7 +240,7 @@ class NotionClient:
                 },
             }
 
-            response = self.client.pages.create(**new_page_data)
+            response = self.client.pages.create(**new_page_data)  # type: ignore
             logger.info(f"Created new Notion problem for feedback from {feedback.transcript_id}")
             return response["id"]
 

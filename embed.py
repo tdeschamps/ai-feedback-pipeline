@@ -14,16 +14,16 @@ try:
     from chromadb.config import Settings as ChromaSettings
 except ImportError as e:
     logging.warning(f"ChromaDB not available: {e}")
-    chromadb = None
-    ChromaSettings = None
+    chromadb = None  # type: ignore
+    ChromaSettings = None  # type: ignore
 
 try:
     import pinecone
     from pinecone import Pinecone
 except ImportError as e:
     logging.warning(f"Pinecone not available: {e}")
-    pinecone = None
-    Pinecone = None
+    pinecone = None  # type: ignore
+    Pinecone = None  # type: ignore
 
 from config import settings
 from extract import Feedback
@@ -118,7 +118,10 @@ class ChromaDBVectorStore(VectorStore):
                 documents_content.append(doc.content)
 
             self.collection.upsert(
-                ids=ids, embeddings=embeddings, metadatas=metadatas, documents=documents_content
+                ids=ids,
+                embeddings=embeddings,  # type: ignore
+                metadatas=metadatas,  # type: ignore
+                documents=documents_content
             )
 
             logger.info(f"Added {len(documents)} documents to ChromaDB")
@@ -132,7 +135,7 @@ class ChromaDBVectorStore(VectorStore):
         """Search for similar documents in ChromaDB."""
         try:
             results = self.collection.query(
-                query_embeddings=[query_embedding],
+                query_embeddings=[query_embedding],  # type: ignore
                 n_results=limit,
                 include=["documents", "metadatas", "distances"],
             )
@@ -144,9 +147,9 @@ class ChromaDBVectorStore(VectorStore):
                         "id": results["ids"][0][i],
                         "content": results["documents"][0][i] if results["documents"] else "",
                         "metadata": results["metadatas"][0][i] if results["metadatas"] else {},
-                        "score": 1 - results["distances"][0][i],  # Convert distance to similarity
+                        "score": 1 - (results["distances"][0][i] if results["distances"] else 0),  # type: ignore
                         "doc_type": (
-                            results["metadatas"][0][i].get("doc_type", "")
+                            results["metadatas"][0][i].get("doc_type", "")  # type: ignore
                             if results["metadatas"]
                             else ""
                         ),
