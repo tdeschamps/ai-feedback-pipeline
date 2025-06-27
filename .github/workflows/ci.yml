@@ -23,7 +23,21 @@ jobs:
       uses: astral-sh/setup-uv@v3
       with:
         version: "latest"
-        enable-cache: true
+
+    - name: Get UV cache directory
+      id: uv-cache-dir
+      run: |
+        echo "dir=$(uv cache dir)" >> $GITHUB_OUTPUT
+
+    - name: Cache UV dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ steps.uv-cache-dir.outputs.dir }}
+          .venv
+        key: ${{ runner.os }}-uv-${{ hashFiles('**/uv.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-
 
     - name: Install dependencies
       run: uv sync --dev
@@ -47,7 +61,21 @@ jobs:
       uses: astral-sh/setup-uv@v3
       with:
         version: "latest"
-        enable-cache: true
+
+    - name: Get UV cache directory
+      id: uv-cache-dir
+      run: |
+        echo "dir=$(uv cache dir)" >> $GITHUB_OUTPUT
+
+    - name: Cache UV dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ steps.uv-cache-dir.outputs.dir }}
+          .venv
+        key: ${{ runner.os }}-uv-${{ hashFiles('**/uv.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-
 
     - name: Install dependencies
       run: uv sync --dev
@@ -71,7 +99,21 @@ jobs:
       uses: astral-sh/setup-uv@v3
       with:
         version: "latest"
-        enable-cache: true
+
+    - name: Get UV cache directory
+      id: uv-cache-dir
+      run: |
+        echo "dir=$(uv cache dir)" >> $GITHUB_OUTPUT
+
+    - name: Cache UV dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ steps.uv-cache-dir.outputs.dir }}
+          .venv
+        key: ${{ runner.os }}-uv-${{ hashFiles('**/uv.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-
 
     - name: Install dependencies
       run: uv sync --dev
@@ -99,7 +141,22 @@ jobs:
       uses: astral-sh/setup-uv@v3
       with:
         version: "latest"
-        enable-cache: true
+
+    - name: Get UV cache directory
+      id: uv-cache-dir
+      run: |
+        echo "dir=$(uv cache dir)" >> $GITHUB_OUTPUT
+
+    - name: Cache UV dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ steps.uv-cache-dir.outputs.dir }}
+          .venv
+        key: ${{ runner.os }}-uv-${{ matrix.python-version }}-${{ hashFiles('**/uv.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-${{ matrix.python-version }}-
+          ${{ runner.os }}-uv-
 
     - name: Install dependencies
       run: uv sync --dev
