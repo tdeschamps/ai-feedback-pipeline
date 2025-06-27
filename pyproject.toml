@@ -154,3 +154,57 @@ dev-dependencies = [
 [tool.uv.sources]
 # Optional: specify custom package sources if needed
 # Example: custom-package = { git = "https://github.com/user/repo.git" }
+
+[tool.coverage.run]
+source = [
+  "config.py",
+  "embed.py",
+  "extract.py",
+  "llm_client.py",
+  "main.py",
+  "notion.py",
+  "pipeline.py",
+  "rag.py",
+  "server.py",
+]
+omit = [
+  "tests/*",
+  "tests_backup/*",
+  "__pycache__/*",
+  ".venv/*",
+  "*/site-packages/*",
+  "conftest.py",
+  "test_*.py",
+  "*_test.py",
+  "*/test_*",
+  "*/tests/*",
+  "*.bak",
+]
+branch = true
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+sort = "miss"
+exclude_lines = [
+  "pragma: no cover",
+  "def __repr__",
+  "if self.debug:",
+  "if settings.DEBUG",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "if 0:",
+  "if __name__ == .__main__.:",
+  "class .*\\bProtocol\\):",
+  "@(abc\\.)?abstractmethod",
+]
+# Show files that are below certain thresholds
+fail_under = 43
+skip_empty = true
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.xml]
+output = "coverage.xml"

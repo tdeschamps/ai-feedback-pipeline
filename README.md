@@ -2,7 +2,7 @@
 
 [![CI/CD](https://github.com/tdeschamps/ai-feedback-pipeline/workflows/CI/badge.svg)](https://github.com/tdeschamps/ai-feedback-pipeline/actions)
 [![Code Quality](https://img.shields.io/badge/code%20quality-A-brightgreen)](https://github.com/yourusername/ai-feedback-pipeline)
-[![Coverage](https://img.shields.io/badge/coverage-85%25-green)](https://github.com/yourusername/ai-feedback-pipeline)
+[![Coverage](https://img.shields.io/badge/coverage-44%25-orange)](https://github.com/yourusername/ai-feedback-pipeline)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
@@ -290,16 +290,36 @@ Problem + Feedback → Notion API → Updated problem with:
 
 ## 🧪 Testing
 
+### Current Test Coverage: 44%
+
+The project includes comprehensive test suites with recent major improvements:
+
 ```bash
 # Run tests
 uv run pytest tests/
 
-# Run with coverage
-uv run pytest --cov=. tests/
+# Run with coverage (recommended)
+uv run pytest --cov --cov-config=pyproject.toml --cov-report=html --cov-report=term-missing tests/
+
+# View HTML coverage report
+open htmlcov/index.html
+
+# Analyze coverage gaps
+./analyze_coverage.py
 
 # Run specific test
 uv run pytest tests/test_pipeline.py::TestFeedbackExtractor::test_extract_feedback
 ```
+
+### Recent Test Improvements
+
+- ✅ **Comprehensive CLI testing** (`test_main_comprehensive.py`)
+- ✅ **Complete pipeline orchestration** (`test_pipeline.py`)
+- ✅ **Vector store & embedding testing** (`test_embed_comprehensive.py`)
+- ✅ **LLM extraction testing** (`test_extract_comprehensive.py`)
+- ✅ **RAG matching & metrics** (`test_rag_comprehensive.py`)
+
+See [`TESTING_COVERAGE.md`](./TESTING_COVERAGE.md) for detailed coverage analysis and [`TEST_COVERAGE_IMPROVEMENTS.md`](./TEST_COVERAGE_IMPROVEMENTS.md) for recent improvements.
 
 ## 📈 Monitoring & Metrics
 

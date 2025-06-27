@@ -162,7 +162,14 @@ jobs:
       run: uv sync --dev
 
     - name: Test with pytest
-      run: uv run pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing
+      run: uv run pytest tests/ -v --cov --cov-config=pyproject.toml --cov-report=xml --cov-report=term-missing --cov-report=html
+
+    - name: Generate coverage summary
+      run: |
+        echo "## Coverage Summary" >> $GITHUB_STEP_SUMMARY
+        echo "Files needing more test coverage:" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        uv run coverage report --format=markdown >> $GITHUB_STEP_SUMMARY || true
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
