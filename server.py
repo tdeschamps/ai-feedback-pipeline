@@ -4,16 +4,18 @@ FastAPI server for the AI feedback categorization pipeline.
 
 import logging
 import time
-from typing import Any
+
 
 try:
-    from fastapi import Depends, FastAPI, HTTPException
-    from pydantic import BaseModel, Field, ConfigDict
     import uvicorn
+    from fastapi import Depends, FastAPI, HTTPException
+    from pydantic import BaseModel, ConfigDict, Field
+
     FASTAPI_AVAILABLE = True
 except ImportError:
     logging.warning("FastAPI not available - server functionality disabled")
     FASTAPI_AVAILABLE = False
+
     # Create dummy classes for testing
     class BaseModel:
         def __init__(self, **kwargs):
@@ -27,20 +29,26 @@ except ImportError:
     def Field(**kwargs):
         return None
 
+
 try:
     from pipeline import FeedbackPipeline
+
     PIPELINE_AVAILABLE = True
 except ImportError:
     logging.warning("Pipeline not available - core functionality disabled")
     PIPELINE_AVAILABLE = False
+
     # Create dummy class for testing
     class FeedbackPipeline:
         def __init__(self):
             pass
+
         async def sync_notion_problems(self):
             return True
+
         async def process_transcript(self, content, transcript_id):
             return {"status": "mock", "feedbacks_extracted": 0}
+
         async def batch_process_transcripts(self, transcripts):
             return {"total_transcripts": 0, "results": []}
 
@@ -53,6 +61,7 @@ if FASTAPI_AVAILABLE:
     # Use real Pydantic models when FastAPI is available
     class WebhookPayload(BaseModel):
         """Webhook payload for transcript processing."""
+
         event_type: str
         transcript_id: str
         transcript_content: str
@@ -60,26 +69,30 @@ if FASTAPI_AVAILABLE:
 
     class TranscriptData(BaseModel):
         """Individual transcript data."""
+
         id: str
         content: str
 
     class BatchTranscriptRequest(BaseModel):
         """Request model for batch transcript processing."""
+
         transcripts: list[TranscriptData]
         metadata: dict = Field(default_factory=dict)
 
     class ProcessingResponse(BaseModel):
         """Response model for individual transcript processing."""
+
         transcript_id: str
         feedbacks_extracted: int = 0
         matches_found: int = 0
         problems_updated: int = 0
-        status: str = 'unknown'
+        status: str = "unknown"
         error_message: str | None = None
         processing_time: float | None = None
 
     class BatchProcessingResponse(BaseModel):
         """Response model for batch processing."""
+
         total_transcripts: int = 0
         total_feedbacks: int = 0
         total_matches: int = 0
@@ -91,8 +104,11 @@ if FASTAPI_AVAILABLE:
 
     class FeedbackRequest(BaseModel):
         """Request model for direct feedback processing."""
+
         content: str = Field(..., description="The feedback content/text")
-        confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score between 0.0 and 1.0")
+        confidence: float = Field(
+            ..., ge=0.0, le=1.0, description="Confidence score between 0.0 and 1.0"
+        )
         type: str = Field(..., description="Feedback type: feature_request or customer_pain")
 
         model_config = ConfigDict(
@@ -100,13 +116,14 @@ if FASTAPI_AVAILABLE:
                 "example": {
                     "content": "We need to export data to Excel files",
                     "confidence": 0.85,
-                    "type": "feature_request"
+                    "type": "feature_request",
                 }
             }
         )
 
     class FeedbackResponse(BaseModel):
         """Response model for feedback processing."""
+
         feedback_id: str
         type: str
         content: str
@@ -117,14 +134,15 @@ if FASTAPI_AVAILABLE:
         match_confidence: float | None = None
         similarity_score: float | None = None
         reasoning: str | None = None
-        status: str = 'completed'
+        status: str = "completed"
         error_message: str | None = None
         processing_time: float | None = None
 
     class HealthResponse(BaseModel):
         """Health check response."""
-        status: str = 'unknown'
-        version: str = '1.0.0'
+
+        status: str = "unknown"
+        version: str = "1.0.0"
         dependencies: dict = Field(default_factory=dict)
 
 else:
@@ -132,7 +150,14 @@ else:
     class WebhookPayload(BaseModel):
         """Webhook payload for transcript processing."""
 
-        def __init__(self, event_type=None, transcript_id=None, transcript_content=None, metadata=None, **kwargs):
+        def __init__(
+            self,
+            event_type=None,
+            transcript_id=None,
+            transcript_content=None,
+            metadata=None,
+            **kwargs,
+        ):
             super().__init__(**kwargs)
             self.event_type = event_type
             self.transcript_id = transcript_id
@@ -158,9 +183,17 @@ else:
     class ProcessingResponse(BaseModel):
         """Response model for individual transcript processing."""
 
-        def __init__(self, transcript_id=None, feedbacks_extracted=0, matches_found=0,
-                     problems_updated=0, status='unknown', error_message=None,
-                     processing_time=None, **kwargs):
+        def __init__(
+            self,
+            transcript_id=None,
+            feedbacks_extracted=0,
+            matches_found=0,
+            problems_updated=0,
+            status="unknown",
+            error_message=None,
+            processing_time=None,
+            **kwargs,
+        ):
             super().__init__(**kwargs)
             self.transcript_id = transcript_id
             self.feedbacks_extracted = feedbacks_extracted
@@ -173,9 +206,18 @@ else:
     class BatchProcessingResponse(BaseModel):
         """Response model for batch processing."""
 
-        def __init__(self, total_transcripts=0, total_feedbacks=0, total_matches=0,
-                     total_updates=0, success_rate=0.0, processing_time=0.0,
-                     results=None, errors=None, **kwargs):
+        def __init__(
+            self,
+            total_transcripts=0,
+            total_feedbacks=0,
+            total_matches=0,
+            total_updates=0,
+            success_rate=0.0,
+            processing_time=0.0,
+            results=None,
+            errors=None,
+            **kwargs,
+        ):
             super().__init__(**kwargs)
             self.total_transcripts = total_transcripts
             self.total_feedbacks = total_feedbacks
@@ -198,10 +240,23 @@ else:
     class FeedbackResponse(BaseModel):
         """Response model for feedback processing."""
 
-        def __init__(self, feedback_id=None, type=None, content=None, confidence=None,
-                     match_found=False, problem_id=None, problem_title=None,
-                     match_confidence=None, similarity_score=None, reasoning=None,
-                     status='completed', error_message=None, processing_time=None, **kwargs):
+        def __init__(
+            self,
+            feedback_id=None,
+            type=None,
+            content=None,
+            confidence=None,
+            match_found=False,
+            problem_id=None,
+            problem_title=None,
+            match_confidence=None,
+            similarity_score=None,
+            reasoning=None,
+            status="completed",
+            error_message=None,
+            processing_time=None,
+            **kwargs,
+        ):
             super().__init__(**kwargs)
             self.feedback_id = feedback_id
             self.type = type
@@ -220,7 +275,7 @@ else:
     class HealthResponse(BaseModel):
         """Health check response."""
 
-        def __init__(self, status='unknown', version='1.0.0', dependencies=None, **kwargs):
+        def __init__(self, status="unknown", version="1.0.0", dependencies=None, **kwargs):
             super().__init__(**kwargs)
             self.status = status
             self.version = version
@@ -255,14 +310,14 @@ if FASTAPI_AVAILABLE:
     async def health_check():
         """Health check endpoint."""
         try:
-            pipeline = await get_pipeline()
+            await get_pipeline()
             return HealthResponse(
                 status="healthy",
                 dependencies={
                     "pipeline": "operational",
                     "embedding_manager": "operational",
                     "notion_client": "operational",
-                }
+                },
             )
         except Exception as e:
             logger.error(f"Health check failed: {e}")
@@ -270,8 +325,7 @@ if FASTAPI_AVAILABLE:
 
     @app.post("/webhook/transcript", response_model=ProcessingResponse)
     async def process_transcript_webhook(
-        payload: WebhookPayload,
-        pipeline: FeedbackPipeline = Depends(get_pipeline)
+        payload: WebhookPayload, pipeline: FeedbackPipeline = Depends(get_pipeline)
     ):
         """Process a single transcript via webhook."""
         start_time = time.time()
@@ -280,8 +334,7 @@ if FASTAPI_AVAILABLE:
             logger.info(f"Processing webhook for transcript {payload.transcript_id}")
 
             result = await pipeline.process_transcript(
-                payload.transcript_content,
-                payload.transcript_id
+                payload.transcript_content, payload.transcript_id
             )
 
             processing_time = time.time() - start_time
@@ -292,7 +345,7 @@ if FASTAPI_AVAILABLE:
                 matches_found=result.get("matches_found", 0),
                 problems_updated=result.get("problems_updated", 0),
                 status=result.get("status", "completed"),
-                processing_time=processing_time
+                processing_time=processing_time,
             )
 
         except Exception as e:
@@ -306,13 +359,12 @@ if FASTAPI_AVAILABLE:
                 problems_updated=0,
                 status="error",
                 error_message=str(e),
-                processing_time=processing_time
+                processing_time=processing_time,
             )
 
     @app.post("/process/batch", response_model=BatchProcessingResponse)
     async def process_batch_transcripts(
-        request: BatchTranscriptRequest,
-        pipeline: FeedbackPipeline = Depends(get_pipeline)
+        request: BatchTranscriptRequest, pipeline: FeedbackPipeline = Depends(get_pipeline)
     ):
         """Process multiple transcripts in batch."""
         start_time = time.time()
@@ -321,10 +373,7 @@ if FASTAPI_AVAILABLE:
             logger.info(f"Processing batch of {len(request.transcripts)} transcripts")
 
             # Convert to pipeline format
-            transcripts_data = [
-                {"id": t.id, "content": t.content}
-                for t in request.transcripts
-            ]
+            transcripts_data = [{"id": t.id, "content": t.content} for t in request.transcripts]
 
             result = await pipeline.batch_process_transcripts(transcripts_data)
 
@@ -333,14 +382,16 @@ if FASTAPI_AVAILABLE:
             # Convert results to response format
             individual_results = []
             for transcript_result in result.get("results", []):
-                individual_results.append(ProcessingResponse(
-                    transcript_id=transcript_result.get("transcript_id", "unknown"),
-                    feedbacks_extracted=transcript_result.get("feedbacks_extracted", 0),
-                    matches_found=transcript_result.get("matches_found", 0),
-                    problems_updated=transcript_result.get("problems_updated", 0),
-                    status=transcript_result.get("status", "completed"),
-                    error_message=transcript_result.get("error")
-                ))
+                individual_results.append(
+                    ProcessingResponse(
+                        transcript_id=transcript_result.get("transcript_id", "unknown"),
+                        feedbacks_extracted=transcript_result.get("feedbacks_extracted", 0),
+                        matches_found=transcript_result.get("matches_found", 0),
+                        problems_updated=transcript_result.get("problems_updated", 0),
+                        status=transcript_result.get("status", "completed"),
+                        error_message=transcript_result.get("error"),
+                    )
+                )
 
             return BatchProcessingResponse(
                 total_transcripts=result.get("total_transcripts", 0),
@@ -349,7 +400,7 @@ if FASTAPI_AVAILABLE:
                 total_updates=result.get("total_updates", 0),
                 success_rate=result.get("success_rate", 0.0),
                 processing_time=processing_time,
-                results=individual_results
+                results=individual_results,
             )
 
         except Exception as e:
@@ -375,8 +426,7 @@ if FASTAPI_AVAILABLE:
 
     @app.post("/process/feedback", response_model=FeedbackResponse)
     async def process_feedback(
-        request: FeedbackRequest,
-        pipeline: FeedbackPipeline = Depends(get_pipeline)
+        request: FeedbackRequest, pipeline: FeedbackPipeline = Depends(get_pipeline)
     ):
         """Process a single feedback directly."""
         start_time = time.time()
@@ -386,39 +436,38 @@ if FASTAPI_AVAILABLE:
             if request.type not in ["feature_request", "customer_pain"]:
                 raise HTTPException(
                     status_code=400,
-                    detail="Invalid feedback type. Must be 'feature_request' or 'customer_pain'"
+                    detail="Invalid feedback type. Must be 'feature_request' or 'customer_pain'",
                 )
 
             # Validate confidence
             if not (0.0 <= request.confidence <= 1.0):
                 raise HTTPException(
-                    status_code=400,
-                    detail="Confidence must be between 0.0 and 1.0"
+                    status_code=400, detail="Confidence must be between 0.0 and 1.0"
                 )
 
             # Validate content
             if not request.content.strip():
-                raise HTTPException(
-                    status_code=400,
-                    detail="Content cannot be empty"
-                )
+                raise HTTPException(status_code=400, detail="Content cannot be empty")
 
             logger.info(f"Processing direct feedback of type {request.type}")
 
             # Create Feedback object
-            from extract import Feedback
-            from datetime import datetime
             import uuid
+            from datetime import datetime
+
+            from extract import Feedback
 
             feedback_id = str(uuid.uuid4())
             feedback = Feedback(
                 type=request.type,
-                summary=request.content[:100] + "..." if len(request.content) > 100 else request.content,
+                summary=request.content[:100] + "..."
+                if len(request.content) > 100
+                else request.content,
                 verbatim=request.content,
                 confidence=request.confidence,
                 transcript_id=f"api-{feedback_id}",
                 timestamp=datetime.now(),
-                context="API request"
+                context="API request",
             )
 
             # Process feedback through pipeline
@@ -441,7 +490,7 @@ if FASTAPI_AVAILABLE:
                 similarity_score=match.similarity_score if match else None,
                 reasoning=match.reasoning if match else None,
                 status="completed",
-                processing_time=processing_time
+                processing_time=processing_time,
             )
 
         except HTTPException:
@@ -452,14 +501,14 @@ if FASTAPI_AVAILABLE:
             logger.error(f"Error processing feedback: {e}")
 
             return FeedbackResponse(
-                feedback_id=str(uuid.uuid4()) if 'feedback_id' not in locals() else feedback_id,
+                feedback_id=str(uuid.uuid4()) if "feedback_id" not in locals() else feedback_id,
                 type=request.type,
                 content=request.content,
                 confidence=request.confidence,
                 match_found=False,
                 status="error",
                 error_message=str(e),
-                processing_time=processing_time
+                processing_time=processing_time,
             )
 
     @app.get("/metrics")
@@ -478,13 +527,7 @@ def run_server(host: str = "0.0.0.0", port: int = 8000, reload: bool = False):
     if not FASTAPI_AVAILABLE:
         raise ImportError("FastAPI not available - cannot run server")
 
-    uvicorn.run(
-        "server:app",
-        host=host,
-        port=port,
-        reload=reload,
-        log_level="info"
-    )
+    uvicorn.run("server:app", host=host, port=port, reload=reload, log_level="info")
 
 
 if __name__ == "__main__":

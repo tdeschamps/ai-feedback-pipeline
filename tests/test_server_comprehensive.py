@@ -4,8 +4,8 @@ Comprehensive step-by-step tests for server.py
 
 import os
 import sys
-import time
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import Mock
+
 
 # Add project to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -62,7 +62,7 @@ class TestPydanticModels:
                 event_type="transcript_ready",
                 transcript_id="test-123",
                 transcript_content="This is a test transcript",
-                metadata={"source": "circleback", "duration": 1800}
+                metadata={"source": "circleback", "duration": 1800},
             )
 
             assert payload.event_type == "transcript_ready"
@@ -85,10 +85,7 @@ class TestPydanticModels:
                 id: str
                 content: str
 
-            transcript = TranscriptData(
-                id="transcript-456",
-                content="Sample transcript content"
-            )
+            transcript = TranscriptData(id="transcript-456", content="Sample transcript content")
 
             assert transcript.id == "transcript-456"
             assert transcript.content == "Sample transcript content"
@@ -116,8 +113,7 @@ class TestPydanticModels:
             transcript2 = TranscriptData(id="t2", content="Content 2")
 
             request = BatchTranscriptRequest(
-                transcripts=[transcript1, transcript2],
-                metadata={"batch_id": "batch-123"}
+                transcripts=[transcript1, transcript2], metadata={"batch_id": "batch-123"}
             )
 
             assert len(request.transcripts) == 2
@@ -140,7 +136,7 @@ class TestPydanticModels:
                 feedbacks_extracted: int = 0
                 matches_found: int = 0
                 problems_updated: int = 0
-                status: str = 'unknown'
+                status: str = "unknown"
                 error_message: str | None = None
                 processing_time: float | None = None
 
@@ -150,7 +146,7 @@ class TestPydanticModels:
                 matches_found=2,
                 problems_updated=1,
                 status="completed",
-                processing_time=2.5
+                processing_time=2.5,
             )
 
             assert response.transcript_id == "test-789"
@@ -176,7 +172,7 @@ class TestPydanticModels:
                 feedbacks_extracted: int = 0
                 matches_found: int = 0
                 problems_updated: int = 0
-                status: str = 'unknown'
+                status: str = "unknown"
                 error_message: str | None = None
                 processing_time: float | None = None
 
@@ -195,7 +191,7 @@ class TestPydanticModels:
                 feedbacks_extracted=2,
                 matches_found=1,
                 problems_updated=1,
-                status="completed"
+                status="completed",
             )
 
             batch_response = BatchProcessingResponse(
@@ -205,7 +201,7 @@ class TestPydanticModels:
                 total_updates=2,
                 success_rate=0.5,
                 processing_time=5.0,
-                results=[individual_response]
+                results=[individual_response],
             )
 
             assert batch_response.total_transcripts == 2
@@ -225,14 +221,14 @@ class TestPydanticModels:
             from pydantic import BaseModel, Field
 
             class HealthResponse(BaseModel):
-                status: str = 'unknown'
-                version: str = '1.0.0'
+                status: str = "unknown"
+                version: str = "1.0.0"
                 dependencies: dict = Field(default_factory=dict)
 
             health = HealthResponse(
                 status="healthy",
                 version="1.0.0",
-                dependencies={"pipeline": "operational", "notion": "operational"}
+                dependencies={"pipeline": "operational", "notion": "operational"},
             )
 
             assert health.status == "healthy"
@@ -278,8 +274,8 @@ class TestFastAPIApp:
             from pydantic import BaseModel, Field
 
             class HealthResponse(BaseModel):
-                status: str = 'unknown'
-                version: str = '1.0.0'
+                status: str = "unknown"
+                version: str = "1.0.0"
                 dependencies: dict = Field(default_factory=dict)
 
             app = FastAPI()
@@ -293,13 +289,13 @@ class TestFastAPIApp:
                         "pipeline": "operational",
                         "embedding_manager": "operational",
                         "notion_client": "operational",
-                    }
+                    },
                 )
 
             # Verify the endpoint is registered
             health_route = None
             for route in app.routes:
-                if hasattr(route, 'path') and route.path == "/health":
+                if hasattr(route, "path") and route.path == "/health":
                     health_route = route
                     break
 
@@ -315,9 +311,10 @@ class TestFastAPIApp:
         print("Test 9: Testing webhook endpoint structure...")
 
         try:
-            from fastapi import FastAPI, HTTPException, Depends
-            from pydantic import BaseModel, Field
             import time
+
+            from fastapi import Depends, FastAPI, HTTPException
+            from pydantic import BaseModel, Field
 
             class WebhookPayload(BaseModel):
                 event_type: str
@@ -330,7 +327,7 @@ class TestFastAPIApp:
                 feedbacks_extracted: int = 0
                 matches_found: int = 0
                 problems_updated: int = 0
-                status: str = 'unknown'
+                status: str = "unknown"
                 error_message: str | None = None
                 processing_time: float | None = None
 
@@ -340,7 +337,7 @@ class TestFastAPIApp:
                         "feedbacks_extracted": 2,
                         "matches_found": 1,
                         "problems_updated": 1,
-                        "status": "completed"
+                        "status": "completed",
                     }
 
             async def get_mock_pipeline():
@@ -350,16 +347,14 @@ class TestFastAPIApp:
 
             @app.post("/webhook/transcript", response_model=ProcessingResponse)
             async def process_transcript_webhook(
-                payload: WebhookPayload,
-                pipeline = Depends(get_mock_pipeline)
+                payload: WebhookPayload, pipeline=Depends(get_mock_pipeline)
             ):
                 """Process a single transcript via webhook."""
                 start_time = time.time()
 
                 try:
                     result = await pipeline.process_transcript(
-                        payload.transcript_content,
-                        payload.transcript_id
+                        payload.transcript_content, payload.transcript_id
                     )
 
                     processing_time = time.time() - start_time
@@ -370,7 +365,7 @@ class TestFastAPIApp:
                         matches_found=result.get("matches_found", 0),
                         problems_updated=result.get("problems_updated", 0),
                         status=result.get("status", "completed"),
-                        processing_time=processing_time
+                        processing_time=processing_time,
                     )
 
                 except Exception as e:
@@ -383,13 +378,13 @@ class TestFastAPIApp:
                         problems_updated=0,
                         status="error",
                         error_message=str(e),
-                        processing_time=processing_time
+                        processing_time=processing_time,
                     )
 
             # Verify the endpoint is registered
             webhook_route = None
             for route in app.routes:
-                if hasattr(route, 'path') and route.path == "/webhook/transcript":
+                if hasattr(route, "path") and route.path == "/webhook/transcript":
                     webhook_route = route
                     break
 
@@ -405,9 +400,10 @@ class TestFastAPIApp:
         print("Test 10: Testing batch endpoint structure...")
 
         try:
-            from fastapi import FastAPI, HTTPException, Depends
-            from pydantic import BaseModel, Field
             import time
+
+            from fastapi import Depends, FastAPI, HTTPException
+            from pydantic import BaseModel, Field
 
             class TranscriptData(BaseModel):
                 id: str
@@ -422,7 +418,7 @@ class TestFastAPIApp:
                 feedbacks_extracted: int = 0
                 matches_found: int = 0
                 problems_updated: int = 0
-                status: str = 'unknown'
+                status: str = "unknown"
                 error_message: str | None = None
                 processing_time: float | None = None
 
@@ -450,9 +446,10 @@ class TestFastAPIApp:
                                 "feedbacks_extracted": 2,
                                 "matches_found": 1,
                                 "problems_updated": 1,
-                                "status": "completed"
-                            } for t in transcripts
-                        ]
+                                "status": "completed",
+                            }
+                            for t in transcripts
+                        ],
                     }
 
             async def get_mock_pipeline():
@@ -462,8 +459,7 @@ class TestFastAPIApp:
 
             @app.post("/process/batch", response_model=BatchProcessingResponse)
             async def process_batch_transcripts(
-                request: BatchTranscriptRequest,
-                pipeline = Depends(get_mock_pipeline)
+                request: BatchTranscriptRequest, pipeline=Depends(get_mock_pipeline)
             ):
                 """Process multiple transcripts in batch."""
                 start_time = time.time()
@@ -471,8 +467,7 @@ class TestFastAPIApp:
                 try:
                     # Convert to pipeline format
                     transcripts_data = [
-                        {"id": t.id, "content": t.content}
-                        for t in request.transcripts
+                        {"id": t.id, "content": t.content} for t in request.transcripts
                     ]
 
                     result = await pipeline.batch_process_transcripts(transcripts_data)
@@ -482,14 +477,16 @@ class TestFastAPIApp:
                     # Convert results to response format
                     individual_results = []
                     for transcript_result in result.get("results", []):
-                        individual_results.append(ProcessingResponse(
-                            transcript_id=transcript_result.get("transcript_id", "unknown"),
-                            feedbacks_extracted=transcript_result.get("feedbacks_extracted", 0),
-                            matches_found=transcript_result.get("matches_found", 0),
-                            problems_updated=transcript_result.get("problems_updated", 0),
-                            status=transcript_result.get("status", "completed"),
-                            error_message=transcript_result.get("error")
-                        ))
+                        individual_results.append(
+                            ProcessingResponse(
+                                transcript_id=transcript_result.get("transcript_id", "unknown"),
+                                feedbacks_extracted=transcript_result.get("feedbacks_extracted", 0),
+                                matches_found=transcript_result.get("matches_found", 0),
+                                problems_updated=transcript_result.get("problems_updated", 0),
+                                status=transcript_result.get("status", "completed"),
+                                error_message=transcript_result.get("error"),
+                            )
+                        )
 
                     return BatchProcessingResponse(
                         total_transcripts=result.get("total_transcripts", 0),
@@ -498,7 +495,7 @@ class TestFastAPIApp:
                         total_updates=result.get("total_updates", 0),
                         success_rate=result.get("success_rate", 0.0),
                         processing_time=processing_time,
-                        results=individual_results
+                        results=individual_results,
                     )
 
                 except Exception as e:
@@ -508,7 +505,7 @@ class TestFastAPIApp:
             # Verify the endpoint is registered
             batch_route = None
             for route in app.routes:
-                if hasattr(route, 'path') and route.path == "/process/batch":
+                if hasattr(route, "path") and route.path == "/process/batch":
                     batch_route = route
                     break
 
@@ -550,7 +547,7 @@ class TestFastAPIApp:
             error_route = None
             success_route = None
             for route in app.routes:
-                if hasattr(route, 'path'):
+                if hasattr(route, "path"):
                     if route.path == "/test-error":
                         error_route = route
                     elif route.path == "/test-success":
@@ -593,5 +590,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

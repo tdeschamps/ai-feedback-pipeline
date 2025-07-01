@@ -307,7 +307,13 @@ def status() -> None:
 
 
 @cli.command()
-@click.option("--type", "feedback_type", required=True, type=click.Choice(["feature_request", "customer_pain"]), help="Type of feedback")
+@click.option(
+    "--type",
+    "feedback_type",
+    required=True,
+    type=click.Choice(["feature_request", "customer_pain"]),
+    help="Type of feedback",
+)
 @click.option("--summary", required=True, help="Brief summary of the feedback")
 @click.option("--verbatim", required=True, help="Exact quote or verbatim feedback")
 @click.option("--confidence", default=0.8, type=float, help="Confidence score (0.0-1.0)")
@@ -321,7 +327,7 @@ def process_feedback(
     confidence: float,
     transcript_id: str,
     context: str | None,
-    output: Path | None
+    output: Path | None,
 ) -> None:
     """Process a single feedback directly through the pipeline."""
     try:
@@ -340,9 +346,11 @@ def process_feedback(
             sys.exit(1)
 
         # Run async processing
-        result = asyncio.run(_process_feedback_async(
-            feedback_type, summary, verbatim, confidence, transcript_id, context
-        ))
+        result = asyncio.run(
+            _process_feedback_async(
+                feedback_type, summary, verbatim, confidence, transcript_id, context
+            )
+        )
 
         # Output results
         _display_feedback_processing_result(result, transcript_id)
@@ -367,12 +375,13 @@ async def _process_feedback_async(
     verbatim: str,
     confidence: float,
     transcript_id: str,
-    context: str | None
+    context: str | None,
 ) -> dict[str, Any]:
     """Async wrapper for feedback processing."""
     try:
-        from extract import Feedback
         from datetime import datetime
+
+        from extract import Feedback
 
         # Create feedback object
         feedback = Feedback(
@@ -382,7 +391,7 @@ async def _process_feedback_async(
             confidence=confidence,
             transcript_id=transcript_id,
             timestamp=datetime.now(),
-            context=context
+            context=context,
         )
 
         # Initialize pipeline and process
@@ -399,7 +408,7 @@ async def _process_feedback_async(
                 "verbatim": feedback_obj.verbatim,
                 "confidence": feedback_obj.confidence,
                 "transcript_id": feedback_obj.transcript_id,
-                "context": feedback_obj.context
+                "context": feedback_obj.context,
             },
             "match": {
                 "problem_id": match.problem_id if match else None,
@@ -407,8 +416,10 @@ async def _process_feedback_async(
                 "confidence": match.confidence if match else None,
                 "similarity_score": match.similarity_score if match else None,
                 "reasoning": match.reasoning if match else None,
-            } if match else None,
-            "status": "completed" if results else "error"
+            }
+            if match
+            else None,
+            "status": "completed" if results else "error",
         }
     except Exception as e:
         logger.error(f"Feedback processing failed: {e}")
@@ -432,14 +443,14 @@ def _display_feedback_processing_result(result: dict[str, Any], feedback_id: str
     click.echo(f"   🎯 Confidence: {feedback_data.get('confidence', 0):.3f}")
 
     if match_data:
-        click.echo(f"   🔗 Match found:")
+        click.echo("   🔗 Match found:")
         click.echo(f"      📊 Problem: {match_data.get('problem_title', 'Unknown')}")
         click.echo(f"      🎯 Match confidence: {match_data.get('confidence', 0):.3f}")
         click.echo(f"      📈 Similarity: {match_data.get('similarity_score', 0):.3f}")
-        if match_data.get('reasoning'):
+        if match_data.get("reasoning"):
             click.echo(f"      💭 Reasoning: {match_data['reasoning'][:100]}...")
     else:
-        click.echo(f"   ⚠️  No match found for this feedback")
+        click.echo("   ⚠️  No match found for this feedback")
 
 
 if __name__ == "__main__":

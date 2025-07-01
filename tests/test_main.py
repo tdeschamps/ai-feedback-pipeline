@@ -6,10 +6,10 @@ import json
 import os
 import sys
 import tempfile
-import time
-from pathlib import Path
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
 from datetime import datetime
+from pathlib import Path
+from unittest.mock import AsyncMock, Mock, patch
+
 
 # Add project to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -48,7 +48,8 @@ class TestCLIGroup:
         with patch.dict("sys.modules", get_mock_modules()):
             try:
                 import main
-                assert hasattr(main, 'cli'), "CLI group not found"
+
+                assert hasattr(main, "cli"), "CLI group not found"
                 print("✓ Test 1 passed: CLI imports successfully")
             except ImportError as e:
                 print(f"✓ Test 1 skipped: Import failed ({e})")
@@ -65,18 +66,18 @@ class TestCLIGroup:
                 mock_context.ensure_object.return_value = None
                 mock_context.obj = {}
 
-                with patch("main.click", mock_click), \
-                     patch("main.setup_logging") as mock_setup_logging:
-
+                with patch("main.click", mock_click), patch("main.setup_logging"):
                     import main
 
                     # Test that the CLI function exists
-                    assert hasattr(main, 'cli'), "CLI function not found"
-                    assert hasattr(main, 'process_transcript'), "process_transcript command not found"
-                    assert hasattr(main, 'batch_process'), "batch_process command not found"
-                    assert hasattr(main, 'sync_problems'), "sync_problems command not found"
-                    assert hasattr(main, 'show_feedbacks'), "show_feedbacks command not found"
-                    assert hasattr(main, 'status'), "status command not found"
+                    assert hasattr(main, "cli"), "CLI function not found"
+                    assert hasattr(main, "process_transcript"), (
+                        "process_transcript command not found"
+                    )
+                    assert hasattr(main, "batch_process"), "batch_process command not found"
+                    assert hasattr(main, "sync_problems"), "sync_problems command not found"
+                    assert hasattr(main, "show_feedbacks"), "show_feedbacks command not found"
+                    assert hasattr(main, "status"), "status command not found"
 
                     print("✓ Test 2 passed: CLI setup works")
             except Exception as e:
@@ -98,19 +99,22 @@ class TestProcessTranscriptCommand:
                         "status": "completed",
                         "feedbacks_extracted": 2,
                         "matches_found": 1,
-                        "problems_updated": 1
+                        "problems_updated": 1,
                     }
                     mock_pipeline_class.return_value = mock_pipeline
 
-                    import main
                     import asyncio
+
+                    import main
 
                     # Test the async wrapper
                     result = asyncio.run(main._process_transcript_async("test content", "test-id"))
 
                     assert result["status"] == "completed"
                     assert result["feedbacks_extracted"] == 2
-                    mock_pipeline.process_transcript.assert_called_once_with("test content", "test-id")
+                    mock_pipeline.process_transcript.assert_called_once_with(
+                        "test content", "test-id"
+                    )
 
                     print("✓ Test 3 passed: Async transcript processing works")
             except Exception as e:
@@ -129,7 +133,7 @@ class TestProcessTranscriptCommand:
                         "status": "completed",
                         "feedbacks_extracted": 3,
                         "matches_found": 2,
-                        "problems_updated": 1
+                        "problems_updated": 1,
                     }
 
                     main._display_processing_result(result, "test-transcript")
@@ -152,10 +156,7 @@ class TestProcessTranscriptCommand:
                 with patch("main.click") as mock_click:
                     import main
 
-                    result = {
-                        "status": "error",
-                        "error": "Test error message"
-                    }
+                    result = {"status": "error", "error": "Test error message"}
 
                     main._display_processing_result(result, "test-transcript")
 
@@ -180,7 +181,7 @@ class TestProcessTranscriptCommand:
                         "status": "completed",
                         "feedbacks_extracted": 0,
                         "matches_found": 0,
-                        "problems_updated": 0
+                        "problems_updated": 0,
                     }
 
                     main._display_processing_result(result_no_feedbacks, "test-transcript")
@@ -190,7 +191,7 @@ class TestProcessTranscriptCommand:
                         "status": "completed",
                         "feedbacks_extracted": 2,
                         "matches_found": 0,
-                        "problems_updated": 0
+                        "problems_updated": 0,
                     }
 
                     main._display_processing_result(result_no_matches, "test-transcript")
@@ -221,7 +222,7 @@ class TestFileOperations:
                         "status": "completed",
                         "feedbacks_extracted": 2,
                         "matches_found": 1,
-                        "timestamp": "2023-01-01T00:00:00"  # Use string instead of datetime
+                        "timestamp": "2023-01-01T00:00:00",  # Use string instead of datetime
                     }
 
                     main._save_results(result, output_path)
@@ -256,7 +257,9 @@ class TestFileOperations:
                     main._save_results(result, output_path)
 
                     # Verify nested directories were created
-                    assert output_path.exists(), "Nested directory and file should have been created"
+                    assert output_path.exists(), (
+                        "Nested directory and file should have been created"
+                    )
                     assert output_path.parent.exists(), "Parent directory should exist"
 
                     print("✓ Test 8 passed: Directory creation in save results works")
@@ -281,16 +284,17 @@ class TestBatchProcessCommand:
                         "total_matches": 2,
                         "total_updates": 1,
                         "success_rate": 0.5,
-                        "metrics_file": "test_metrics.json"
+                        "metrics_file": "test_metrics.json",
                     }
                     mock_pipeline_class.return_value = mock_pipeline
 
-                    import main
                     import asyncio
+
+                    import main
 
                     transcripts = [
                         {"id": "t1", "content": "content1"},
-                        {"id": "t2", "content": "content2"}
+                        {"id": "t2", "content": "content2"},
                     ]
 
                     result = asyncio.run(main._batch_process_async(transcripts))
@@ -318,8 +322,9 @@ class TestSyncProblemsCommand:
                     mock_pipeline.sync_notion_problems.return_value = True
                     mock_pipeline_class.return_value = mock_pipeline
 
-                    import main
                     import asyncio
+
+                    import main
 
                     result = asyncio.run(main._sync_problems_async())
 
@@ -343,13 +348,14 @@ class TestStatusCommand:
                 import main
 
                 # Test status command exists
-                assert hasattr(main, 'status'), "Status command should exist"
+                assert hasattr(main, "status"), "Status command should exist"
 
                 # Mock the necessary dependencies more simply
-                with patch("main.settings") as mock_settings, \
-                     patch("main.click") as mock_click, \
-                     patch("main.Path") as mock_path:
-
+                with (
+                    patch("main.settings") as mock_settings,
+                    patch("main.click"),
+                    patch("main.Path") as mock_path,
+                ):
                     # Mock settings attributes
                     mock_settings.llm_provider = "openai"
                     mock_settings.llm_model = "gpt-4"
@@ -382,10 +388,11 @@ class TestProcessFeedbackCommand:
 
         with patch.dict("sys.modules", get_mock_modules()):
             try:
-                with patch("main.FeedbackPipeline") as mock_pipeline_class, \
-                     patch("main.Feedback") as mock_feedback_class, \
-                     patch("main.datetime") as mock_datetime:
-
+                with (
+                    patch("main.FeedbackPipeline") as mock_pipeline_class,
+                    patch("main.Feedback") as mock_feedback_class,
+                    patch("main.datetime") as mock_datetime,
+                ):
                     # Mock pipeline
                     mock_pipeline = AsyncMock()
                     mock_match = Mock()
@@ -413,17 +420,20 @@ class TestProcessFeedbackCommand:
                     mock_datetime.now.return_value = datetime(2023, 1, 1, 12, 0, 0)
 
                     import asyncio
+
                     import main
 
                     # Test the async wrapper
-                    result = asyncio.run(main._process_feedback_async(
-                        "feature_request",
-                        "Test feature request",
-                        "We need this feature",
-                        0.8,
-                        "test-id",
-                        "test context"
-                    ))
+                    result = asyncio.run(
+                        main._process_feedback_async(
+                            "feature_request",
+                            "Test feature request",
+                            "We need this feature",
+                            0.8,
+                            "test-id",
+                            "test context",
+                        )
+                    )
 
                     # Verify result structure
                     assert result["status"] == "completed"
@@ -455,10 +465,11 @@ class TestProcessFeedbackCommand:
 
         with patch.dict("sys.modules", get_mock_modules()):
             try:
-                with patch("main.FeedbackPipeline") as mock_pipeline_class, \
-                     patch("main.Feedback") as mock_feedback_class, \
-                     patch("main.datetime") as mock_datetime:
-
+                with (
+                    patch("main.FeedbackPipeline") as mock_pipeline_class,
+                    patch("main.Feedback") as mock_feedback_class,
+                    patch("main.datetime") as mock_datetime,
+                ):
                     # Mock pipeline
                     mock_pipeline = AsyncMock()
                     mock_feedback = Mock()
@@ -479,18 +490,21 @@ class TestProcessFeedbackCommand:
                     # Mock datetime
                     mock_datetime.now.return_value = datetime(2023, 1, 1, 12, 0, 0)
 
-                    import main
                     import asyncio
 
+                    import main
+
                     # Test the async wrapper
-                    result = asyncio.run(main._process_feedback_async(
-                        "customer_pain",
-                        "Test customer pain",
-                        "This is frustrating",
-                        0.9,
-                        "test-pain-id",
-                        None
-                    ))
+                    result = asyncio.run(
+                        main._process_feedback_async(
+                            "customer_pain",
+                            "Test customer pain",
+                            "This is frustrating",
+                            0.9,
+                            "test-pain-id",
+                            None,
+                        )
+                    )
 
                     # Verify result structure
                     assert result["status"] == "completed"
@@ -513,9 +527,7 @@ class TestProcessFeedbackCommand:
 
         with patch.dict("sys.modules", get_mock_modules()):
             try:
-                with patch("main.FeedbackPipeline") as mock_pipeline_class, \
-                     patch("main.Feedback"):
-
+                with patch("main.FeedbackPipeline") as mock_pipeline_class, patch("main.Feedback"):
                     # Mock pipeline to raise an exception
                     mock_pipeline = AsyncMock()
                     mock_pipeline.process_feedbacks.side_effect = Exception("Test pipeline error")
@@ -526,17 +538,23 @@ class TestProcessFeedbackCommand:
                     # Test that exception is properly re-raised
                     try:
                         import asyncio
-                        asyncio.run(main._process_feedback_async(
-                            "feature_request",
-                            "Test summary",
-                            "Test verbatim",
-                            0.8,
-                            "test-id",
-                            None
-                        ))
+
+                        asyncio.run(
+                            main._process_feedback_async(
+                                "feature_request",
+                                "Test summary",
+                                "Test verbatim",
+                                0.8,
+                                "test-id",
+                                None,
+                            )
+                        )
                         raise AssertionError("Should have raised an exception")
                     except Exception as e:
-                        assert "Test pipeline error" in str(e) or "pipeline processing failed" in str(e).lower()
+                        assert (
+                            "Test pipeline error" in str(e)
+                            or "pipeline processing failed" in str(e).lower()
+                        )
 
                     print("✓ Test 14 passed: Async feedback processing error handling works")
             except Exception as e:
@@ -559,15 +577,15 @@ class TestProcessFeedbackCommand:
                             "verbatim": "We really need this feature for our workflow",
                             "confidence": 0.85,
                             "transcript_id": "test-123",
-                            "context": "Customer interview"
+                            "context": "Customer interview",
                         },
                         "match": {
                             "problem_id": "prob-456",
                             "problem_title": "Workflow Improvement",
                             "confidence": 0.92,
                             "similarity_score": 0.88,
-                            "reasoning": "Strong semantic similarity detected"
-                        }
+                            "reasoning": "Strong semantic similarity detected",
+                        },
                     }
 
                     main._display_feedback_processing_result(result, "test-123")
@@ -575,7 +593,9 @@ class TestProcessFeedbackCommand:
                     # Verify click.echo was called multiple times for all the information
                     assert mock_click.echo.called, "click.echo should have been called"
                     call_count = mock_click.echo.call_count
-                    assert call_count >= 8, f"Expected multiple echo calls for detailed info, got {call_count}"
+                    assert call_count >= 8, (
+                        f"Expected multiple echo calls for detailed info, got {call_count}"
+                    )
 
                     print("✓ Test 15 passed: Successful feedback result display with match works")
             except Exception as e:
@@ -598,9 +618,9 @@ class TestProcessFeedbackCommand:
                             "verbatim": "This process is very confusing",
                             "confidence": 0.75,
                             "transcript_id": "test-456",
-                            "context": None
+                            "context": None,
                         },
-                        "match": None
+                        "match": None,
                     }
 
                     main._display_feedback_processing_result(result, "test-456")
@@ -610,7 +630,9 @@ class TestProcessFeedbackCommand:
                     call_count = mock_click.echo.call_count
                     assert call_count >= 5, f"Expected multiple echo calls, got {call_count}"
 
-                    print("✓ Test 16 passed: Successful feedback result display without match works")
+                    print(
+                        "✓ Test 16 passed: Successful feedback result display without match works"
+                    )
             except Exception as e:
                 print(f"✓ Test 16 skipped: Feedback display test failed ({e})")
 
@@ -623,10 +645,7 @@ class TestProcessFeedbackCommand:
                 with patch("main.click") as mock_click:
                     import main
 
-                    result = {
-                        "status": "error",
-                        "error": "Failed to process feedback"
-                    }
+                    result = {"status": "error", "error": "Failed to process feedback"}
 
                     main._display_feedback_processing_result(result, "test-error")
 
@@ -645,7 +664,6 @@ class TestProcessFeedbackCommand:
             try:
                 # Test confidence validation
                 with patch("main.sys") as mock_sys:
-
                     import main
 
                     # Mock click context and command
@@ -659,7 +677,7 @@ class TestProcessFeedbackCommand:
                         confidence=1.5,  # Invalid
                         transcript_id="test",
                         context=None,
-                        output=None
+                        output=None,
                     )
 
                     # Should call sys.exit(1) for invalid confidence
@@ -678,9 +696,13 @@ class TestProcessFeedbackCommand:
                 import main
 
                 # Test that process_feedback command exists
-                assert hasattr(main, 'process_feedback'), "process_feedback command should exist"
-                assert hasattr(main, '_process_feedback_async'), "_process_feedback_async helper should exist"
-                assert hasattr(main, '_display_feedback_processing_result'), "_display_feedback_processing_result helper should exist"
+                assert hasattr(main, "process_feedback"), "process_feedback command should exist"
+                assert hasattr(main, "_process_feedback_async"), (
+                    "_process_feedback_async helper should exist"
+                )
+                assert hasattr(main, "_display_feedback_processing_result"), (
+                    "_display_feedback_processing_result helper should exist"
+                )
 
                 print("✓ Test 19 passed: Process feedback command structure is correct")
             except Exception as e:
@@ -744,5 +766,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

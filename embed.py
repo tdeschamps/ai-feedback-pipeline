@@ -14,12 +14,14 @@ from unittest.mock import Mock
 def _should_suppress_import_warnings() -> bool:
     """Check if import warnings should be suppressed."""
     import os
+
     # Suppress during tests
-    if os.environ.get('PYTEST_CURRENT_TEST'):
+    if os.environ.get("PYTEST_CURRENT_TEST"):
         return True
     # Check config setting (with safe import to avoid circular dependency)
     try:
         from config import settings
+
         return settings.suppress_import_warnings
     except (ImportError, AttributeError):
         return False
@@ -28,6 +30,7 @@ def _should_suppress_import_warnings() -> bool:
 try:
     import chromadb
     from chromadb.config import Settings as ChromaSettings
+
     CHROMADB_AVAILABLE = True
 except ImportError as e:
     if not _should_suppress_import_warnings():
@@ -39,6 +42,7 @@ except ImportError as e:
 try:
     import pinecone
     from pinecone import Pinecone
+
     PINECONE_AVAILABLE = True
 except ImportError as e:
     if not _should_suppress_import_warnings():

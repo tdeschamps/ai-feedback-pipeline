@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
+
 # Add project to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -58,22 +59,23 @@ class TestLLMClientFactory:
 
             client = get_llm_client()
             assert client is not None
-            assert hasattr(client, 'generate')
-            assert hasattr(client, 'embed')
+            assert hasattr(client, "generate")
+            assert hasattr(client, "embed")
 
     def test_get_llm_client_openai(self):
         """Test getting OpenAI LLM client."""
         mock_config = {"model": "gpt-4o", "api_key": "test-key"}
 
-        with patch("llm_client.get_llm_config", return_value=mock_config), \
-             patch("llm_client.settings") as mock_settings, \
-             patch("llm_client.ChatOpenAI"), \
-             patch("llm_client.OpenAIEmbeddings"):
-
+        with (
+            patch("llm_client.get_llm_config", return_value=mock_config),
+            patch("llm_client.settings") as mock_settings,
+            patch("llm_client.ChatOpenAI"),
+            patch("llm_client.OpenAIEmbeddings"),
+        ):
             mock_settings.llm_provider = "openai"
             mock_settings.embedding_model = "text-embedding-ada-002"
 
-            from llm_client import get_llm_client, OpenAIClient
+            from llm_client import OpenAIClient, get_llm_client
 
             client = get_llm_client()
             assert client is not None
@@ -83,15 +85,16 @@ class TestLLMClientFactory:
         """Test getting Anthropic LLM client."""
         mock_config = {"model": "claude-3-sonnet-20240229", "api_key": "test-key"}
 
-        with patch("llm_client.get_llm_config", return_value=mock_config), \
-             patch("llm_client.settings") as mock_settings, \
-             patch("llm_client.ChatAnthropic"), \
-             patch("llm_client.HuggingFaceEmbeddings"):
-
+        with (
+            patch("llm_client.get_llm_config", return_value=mock_config),
+            patch("llm_client.settings") as mock_settings,
+            patch("llm_client.ChatAnthropic"),
+            patch("llm_client.HuggingFaceEmbeddings"),
+        ):
             mock_settings.llm_provider = "anthropic"
             mock_settings.embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
 
-            from llm_client import get_llm_client, AnthropicClient
+            from llm_client import AnthropicClient, get_llm_client
 
             client = get_llm_client()
             assert client is not None
@@ -101,15 +104,16 @@ class TestLLMClientFactory:
         """Test getting Ollama LLM client."""
         mock_config = {"model": "mistral", "base_url": "http://localhost:11434"}
 
-        with patch("llm_client.get_llm_config", return_value=mock_config), \
-             patch("llm_client.settings") as mock_settings, \
-             patch("llm_client.ChatOllama"), \
-             patch("llm_client.HuggingFaceEmbeddings"):
-
+        with (
+            patch("llm_client.get_llm_config", return_value=mock_config),
+            patch("llm_client.settings") as mock_settings,
+            patch("llm_client.ChatOllama"),
+            patch("llm_client.HuggingFaceEmbeddings"),
+        ):
             mock_settings.llm_provider = "ollama"
             mock_settings.embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
 
-            from llm_client import get_llm_client, OllamaClient
+            from llm_client import OllamaClient, get_llm_client
 
             client = get_llm_client()
             assert client is not None
@@ -131,11 +135,11 @@ class TestLLMClientTypes:
 
     def test_client_inheritance(self):
         """Test that client classes are subclasses of LLMClient."""
-        from llm_client import LLMClient, OpenAIClient, AnthropicClient, OllamaClient
+        from llm_client import AnthropicClient, LLMClient, OllamaClient, OpenAIClient
 
         # Test abstract base class
-        assert hasattr(LLMClient, 'generate')
-        assert hasattr(LLMClient, 'embed')
+        assert hasattr(LLMClient, "generate")
+        assert hasattr(LLMClient, "embed")
 
         # Test that concrete classes are subclasses of LLMClient
         assert issubclass(OpenAIClient, LLMClient)
@@ -146,11 +150,12 @@ class TestLLMClientTypes:
         """Test OpenAI client instantiation."""
         mock_config = {"model": "gpt-4o", "api_key": "test-key"}
 
-        with patch("llm_client.get_llm_config", return_value=mock_config), \
-             patch("llm_client.settings") as mock_settings, \
-             patch("llm_client.ChatOpenAI") as mock_openai, \
-             patch("llm_client.OpenAIEmbeddings") as mock_openai_emb:
-
+        with (
+            patch("llm_client.get_llm_config", return_value=mock_config),
+            patch("llm_client.settings") as mock_settings,
+            patch("llm_client.ChatOpenAI") as mock_openai,
+            patch("llm_client.OpenAIEmbeddings") as mock_openai_emb,
+        ):
             mock_settings.embedding_model = "text-embedding-ada-002"
 
             from llm_client import OpenAIClient
@@ -164,11 +169,12 @@ class TestLLMClientTypes:
         """Test Anthropic client instantiation."""
         mock_config = {"model": "claude-3-sonnet-20240229", "api_key": "test-key"}
 
-        with patch("llm_client.get_llm_config", return_value=mock_config), \
-             patch("llm_client.settings") as mock_settings, \
-             patch("llm_client.ChatAnthropic") as mock_anthropic, \
-             patch("llm_client.HuggingFaceEmbeddings") as mock_hf_emb:
-
+        with (
+            patch("llm_client.get_llm_config", return_value=mock_config),
+            patch("llm_client.settings") as mock_settings,
+            patch("llm_client.ChatAnthropic") as mock_anthropic,
+            patch("llm_client.HuggingFaceEmbeddings") as mock_hf_emb,
+        ):
             mock_settings.embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
 
             from llm_client import AnthropicClient
@@ -182,11 +188,12 @@ class TestLLMClientTypes:
         """Test Ollama client instantiation."""
         mock_config = {"model": "mistral", "base_url": "http://localhost:11434"}
 
-        with patch("llm_client.get_llm_config", return_value=mock_config), \
-             patch("llm_client.settings") as mock_settings, \
-             patch("llm_client.ChatOllama") as mock_ollama, \
-             patch("llm_client.HuggingFaceEmbeddings") as mock_hf_emb:
-
+        with (
+            patch("llm_client.get_llm_config", return_value=mock_config),
+            patch("llm_client.settings") as mock_settings,
+            patch("llm_client.ChatOllama") as mock_ollama,
+            patch("llm_client.HuggingFaceEmbeddings") as mock_hf_emb,
+        ):
             mock_settings.embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
 
             from llm_client import OllamaClient
@@ -205,9 +212,10 @@ class TestOpenAIClient:
         """Test successful OpenAI generation."""
         mock_config = {"model": "gpt-4o", "api_key": "test-key"}
 
-        with patch("llm_client.get_llm_config", return_value=mock_config), \
-             patch("llm_client.settings") as mock_settings:
-
+        with (
+            patch("llm_client.get_llm_config", return_value=mock_config),
+            patch("llm_client.settings") as mock_settings,
+        ):
             mock_settings.embedding_model = "text-embedding-ada-002"
 
             # Mock the LangChain response
@@ -220,16 +228,17 @@ class TestOpenAIClient:
 
             mock_openai_embeddings = Mock()
 
-            with patch("llm_client.ChatOpenAI", return_value=mock_chat_openai), \
-                 patch("llm_client.OpenAIEmbeddings", return_value=mock_openai_embeddings):
-
-                from llm_client import OpenAIClient, LLMResponse
+            with (
+                patch("llm_client.ChatOpenAI", return_value=mock_chat_openai),
+                patch("llm_client.OpenAIEmbeddings", return_value=mock_openai_embeddings),
+            ):
+                from llm_client import LLMResponse, OpenAIClient
 
                 client = OpenAIClient()
 
                 messages = [
                     {"role": "system", "content": "You are a helpful assistant."},
-                    {"role": "user", "content": "Hello!"}
+                    {"role": "user", "content": "Hello!"},
                 ]
 
                 response = await client.generate(messages)
@@ -244,9 +253,10 @@ class TestOpenAIClient:
         """Test OpenAI generation error handling."""
         mock_config = {"model": "gpt-4o", "api_key": "test-key"}
 
-        with patch("llm_client.get_llm_config", return_value=mock_config), \
-             patch("llm_client.settings") as mock_settings:
-
+        with (
+            patch("llm_client.get_llm_config", return_value=mock_config),
+            patch("llm_client.settings") as mock_settings,
+        ):
             mock_settings.embedding_model = "text-embedding-ada-002"
 
             # Mock the LangChain components to raise an error
@@ -255,9 +265,10 @@ class TestOpenAIClient:
 
             mock_openai_embeddings = Mock()
 
-            with patch("llm_client.ChatOpenAI", return_value=mock_chat_openai), \
-                 patch("llm_client.OpenAIEmbeddings", return_value=mock_openai_embeddings):
-
+            with (
+                patch("llm_client.ChatOpenAI", return_value=mock_chat_openai),
+                patch("llm_client.OpenAIEmbeddings", return_value=mock_openai_embeddings),
+            ):
                 from llm_client import OpenAIClient
 
                 client = OpenAIClient()
@@ -271,9 +282,10 @@ class TestOpenAIClient:
         """Test successful OpenAI embedding."""
         mock_config = {"model": "gpt-4o", "api_key": "test-key"}
 
-        with patch("llm_client.get_llm_config", return_value=mock_config), \
-             patch("llm_client.settings") as mock_settings:
-
+        with (
+            patch("llm_client.get_llm_config", return_value=mock_config),
+            patch("llm_client.settings") as mock_settings,
+        ):
             mock_settings.embedding_model = "text-embedding-ada-002"
 
             # Mock the embeddings
@@ -283,9 +295,10 @@ class TestOpenAIClient:
 
             mock_chat_openai = Mock()
 
-            with patch("llm_client.ChatOpenAI", return_value=mock_chat_openai), \
-                 patch("llm_client.OpenAIEmbeddings", return_value=mock_openai_embeddings):
-
+            with (
+                patch("llm_client.ChatOpenAI", return_value=mock_chat_openai),
+                patch("llm_client.OpenAIEmbeddings", return_value=mock_openai_embeddings),
+            ):
                 from llm_client import OpenAIClient
 
                 client = OpenAIClient()
@@ -305,9 +318,10 @@ class TestAnthropicClient:
         """Test successful Anthropic generation."""
         mock_config = {"model": "claude-3-sonnet-20240229", "api_key": "test-key"}
 
-        with patch("llm_client.get_llm_config", return_value=mock_config), \
-             patch("llm_client.settings") as mock_settings:
-
+        with (
+            patch("llm_client.get_llm_config", return_value=mock_config),
+            patch("llm_client.settings") as mock_settings,
+        ):
             mock_settings.embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
 
             # Mock the LangChain response
@@ -320,16 +334,17 @@ class TestAnthropicClient:
 
             mock_hf_embeddings = Mock()
 
-            with patch("llm_client.ChatAnthropic", return_value=mock_chat_anthropic), \
-                 patch("llm_client.HuggingFaceEmbeddings", return_value=mock_hf_embeddings):
-
+            with (
+                patch("llm_client.ChatAnthropic", return_value=mock_chat_anthropic),
+                patch("llm_client.HuggingFaceEmbeddings", return_value=mock_hf_embeddings),
+            ):
                 from llm_client import AnthropicClient, LLMResponse
 
                 client = AnthropicClient()
 
                 messages = [
                     {"role": "system", "content": "You are Claude."},
-                    {"role": "user", "content": "Hello!"}
+                    {"role": "user", "content": "Hello!"},
                 ]
 
                 response = await client.generate(messages)
@@ -344,9 +359,10 @@ class TestAnthropicClient:
         """Test successful Anthropic embedding with HuggingFace."""
         mock_config = {"model": "claude-3-sonnet-20240229", "api_key": "test-key"}
 
-        with patch("llm_client.get_llm_config", return_value=mock_config), \
-             patch("llm_client.settings") as mock_settings:
-
+        with (
+            patch("llm_client.get_llm_config", return_value=mock_config),
+            patch("llm_client.settings") as mock_settings,
+        ):
             mock_settings.embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
 
             # Mock the embeddings
@@ -356,9 +372,10 @@ class TestAnthropicClient:
 
             mock_chat_anthropic = Mock()
 
-            with patch("llm_client.ChatAnthropic", return_value=mock_chat_anthropic), \
-                 patch("llm_client.HuggingFaceEmbeddings", return_value=mock_hf_embeddings):
-
+            with (
+                patch("llm_client.ChatAnthropic", return_value=mock_chat_anthropic),
+                patch("llm_client.HuggingFaceEmbeddings", return_value=mock_hf_embeddings),
+            ):
                 from llm_client import AnthropicClient
 
                 client = AnthropicClient()
@@ -377,9 +394,10 @@ class TestOllamaClient:
         """Test successful Ollama generation."""
         mock_config = {"model": "mistral", "base_url": "http://localhost:11434"}
 
-        with patch("llm_client.get_llm_config", return_value=mock_config), \
-             patch("llm_client.settings") as mock_settings:
-
+        with (
+            patch("llm_client.get_llm_config", return_value=mock_config),
+            patch("llm_client.settings") as mock_settings,
+        ):
             mock_settings.embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
 
             # Mock the LangChain response
@@ -392,10 +410,11 @@ class TestOllamaClient:
 
             mock_hf_embeddings = Mock()
 
-            with patch("llm_client.ChatOllama", return_value=mock_chat_ollama), \
-                 patch("llm_client.HuggingFaceEmbeddings", return_value=mock_hf_embeddings):
-
-                from llm_client import OllamaClient, LLMResponse
+            with (
+                patch("llm_client.ChatOllama", return_value=mock_chat_ollama),
+                patch("llm_client.HuggingFaceEmbeddings", return_value=mock_hf_embeddings),
+            ):
+                from llm_client import LLMResponse, OllamaClient
 
                 client = OllamaClient()
 

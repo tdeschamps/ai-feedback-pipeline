@@ -2,13 +2,12 @@
 Comprehensive step-by-step tests for pipeline.py
 """
 
+import asyncio
 import os
 import sys
-import asyncio
-import json
 from datetime import datetime
-from pathlib import Path
-from unittest.mock import Mock, patch, AsyncMock, mock_open
+from unittest.mock import AsyncMock, Mock, mock_open, patch
+
 
 # Add project to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -46,13 +45,14 @@ class TestFeedbackPipelineInitialization:
         """Test 1: Basic FeedbackPipeline initialization."""
         print("Test 1: Testing FeedbackPipeline initialization...")
 
-        with patch.dict("sys.modules", get_mock_modules()), \
-             patch("pipeline.FeedbackExtractor") as mock_extractor, \
-             patch("pipeline.NotionClient") as mock_notion, \
-             patch("pipeline.EmbeddingManager") as mock_embedding, \
-             patch("pipeline.RAGMatcher") as mock_matcher, \
-             patch("pipeline.MatchingMetrics") as mock_metrics:
-
+        with (
+            patch.dict("sys.modules", get_mock_modules()),
+            patch("pipeline.FeedbackExtractor") as mock_extractor,
+            patch("pipeline.NotionClient") as mock_notion,
+            patch("pipeline.EmbeddingManager") as mock_embedding,
+            patch("pipeline.RAGMatcher") as mock_matcher,
+            patch("pipeline.MatchingMetrics") as mock_metrics,
+        ):
             import pipeline
 
             # Create pipeline instance
@@ -83,13 +83,14 @@ class TestProcessTranscript:
         print("Test 2: Testing process_transcript with no feedback...")
 
         async def async_test():
-            with patch.dict("sys.modules", get_mock_modules()), \
-                 patch("pipeline.FeedbackExtractor") as mock_extractor, \
-                 patch("pipeline.NotionClient") as mock_notion, \
-                 patch("pipeline.EmbeddingManager") as mock_embedding, \
-                 patch("pipeline.RAGMatcher") as mock_matcher, \
-                 patch("pipeline.MatchingMetrics") as mock_metrics:
-
+            with (
+                patch.dict("sys.modules", get_mock_modules()),
+                patch("pipeline.FeedbackExtractor") as mock_extractor,
+                patch("pipeline.NotionClient"),
+                patch("pipeline.EmbeddingManager"),
+                patch("pipeline.RAGMatcher"),
+                patch("pipeline.MatchingMetrics"),
+            ):
                 import pipeline
 
                 # Setup mocks
@@ -110,7 +111,9 @@ class TestProcessTranscript:
                 assert result["status"] == "no_feedback"
 
                 # Verify extractor was called
-                mock_extractor_instance.extract_feedback.assert_called_once_with("Test transcript", "test-id")
+                mock_extractor_instance.extract_feedback.assert_called_once_with(
+                    "Test transcript", "test-id"
+                )
 
                 print("✓ Test 2 passed: process_transcript with no feedback works")
 
@@ -122,18 +125,21 @@ class TestProcessTranscript:
         print("Test 3: Testing process_transcript with error...")
 
         async def async_test():
-            with patch.dict("sys.modules", get_mock_modules()), \
-                 patch("pipeline.FeedbackExtractor") as mock_extractor, \
-                 patch("pipeline.NotionClient") as mock_notion, \
-                 patch("pipeline.EmbeddingManager") as mock_embedding, \
-                 patch("pipeline.RAGMatcher") as mock_matcher, \
-                 patch("pipeline.MatchingMetrics") as mock_metrics:
-
+            with (
+                patch.dict("sys.modules", get_mock_modules()),
+                patch("pipeline.FeedbackExtractor") as mock_extractor,
+                patch("pipeline.NotionClient"),
+                patch("pipeline.EmbeddingManager"),
+                patch("pipeline.RAGMatcher"),
+                patch("pipeline.MatchingMetrics"),
+            ):
                 import pipeline
 
                 # Setup mocks to raise exception
                 mock_extractor_instance = Mock()
-                mock_extractor_instance.extract_feedback = AsyncMock(side_effect=Exception("Extraction failed"))
+                mock_extractor_instance.extract_feedback = AsyncMock(
+                    side_effect=Exception("Extraction failed")
+                )
                 mock_extractor.return_value = mock_extractor_instance
 
                 pipe = pipeline.FeedbackPipeline()
@@ -157,23 +163,25 @@ class TestProcessTranscript:
         print("Test 4: Testing process_transcript with successful feedback processing...")
 
         async def async_test():
-            with patch.dict("sys.modules", get_mock_modules()), \
-                 patch("config.settings") as mock_settings:
-
+            with (
+                patch.dict("sys.modules", get_mock_modules()),
+                patch("config.settings") as mock_settings,
+            ):
                 # Setup settings first
                 mock_settings.confidence_threshold = 0.7
 
-                with patch("pipeline.FeedbackExtractor") as mock_extractor, \
-                     patch("pipeline.NotionClient") as mock_notion, \
-                     patch("pipeline.EmbeddingManager") as mock_embedding, \
-                     patch("pipeline.RAGMatcher") as mock_matcher, \
-                     patch("pipeline.MatchingMetrics") as mock_metrics, \
-                     patch("pipeline.save_feedback_logs") as mock_save_logs, \
-                     patch("builtins.open", mock_open()) as mock_file, \
-                     patch("json.dump") as mock_json_dump:
-
-                    import pipeline
+                with (
+                    patch("pipeline.FeedbackExtractor") as mock_extractor,
+                    patch("pipeline.NotionClient") as mock_notion,
+                    patch("pipeline.EmbeddingManager"),
+                    patch("pipeline.RAGMatcher") as mock_matcher,
+                    patch("pipeline.MatchingMetrics") as mock_metrics,
+                    patch("pipeline.save_feedback_logs"),
+                    patch("builtins.open", mock_open()),
+                    patch("json.dump"),
+                ):
                     import extract
+                    import pipeline
 
                     # Create mock feedback
                     mock_feedback = extract.Feedback(
@@ -183,7 +191,7 @@ class TestProcessTranscript:
                         confidence=0.9,
                         transcript_id="test-transcript",
                         timestamp=datetime.now(),
-                        context="Test context"
+                        context="Test context",
                     )
 
                     # Create mock match result
@@ -196,7 +204,9 @@ class TestProcessTranscript:
 
                     # Setup mocks
                     mock_extractor_instance = Mock()
-                    mock_extractor_instance.extract_feedback = AsyncMock(return_value=[mock_feedback])
+                    mock_extractor_instance.extract_feedback = AsyncMock(
+                        return_value=[mock_feedback]
+                    )
                     mock_extractor.return_value = mock_extractor_instance
 
                     mock_notion_instance = Mock()
@@ -229,9 +239,13 @@ class TestProcessTranscript:
                     mock_notion_instance.update_problem_with_feedback.assert_called_once_with(
                         "problem-123", mock_feedback, 0.8
                     )
-                    mock_metrics_instance.add_result.assert_called_once_with(mock_feedback, mock_match)
+                    mock_metrics_instance.add_result.assert_called_once_with(
+                        mock_feedback, mock_match
+                    )
 
-                    print("✓ Test 4 passed: process_transcript with successful feedback processing works")
+                    print(
+                        "✓ Test 4 passed: process_transcript with successful feedback processing works"
+                    )
 
         # Run async test
         asyncio.run(async_test())
@@ -245,15 +259,16 @@ class TestSyncNotionProblems:
         print("Test 5: Testing sync_notion_problems success...")
 
         async def async_test():
-            with patch.dict("sys.modules", get_mock_modules()), \
-                 patch("pipeline.FeedbackExtractor") as mock_extractor, \
-                 patch("pipeline.NotionClient") as mock_notion, \
-                 patch("pipeline.EmbeddingManager") as mock_embedding, \
-                 patch("pipeline.RAGMatcher") as mock_matcher, \
-                 patch("pipeline.MatchingMetrics") as mock_metrics:
-
-                import pipeline
+            with (
+                patch.dict("sys.modules", get_mock_modules()),
+                patch("pipeline.FeedbackExtractor"),
+                patch("pipeline.NotionClient") as mock_notion,
+                patch("pipeline.EmbeddingManager") as mock_embedding,
+                patch("pipeline.RAGMatcher"),
+                patch("pipeline.MatchingMetrics"),
+            ):
                 import notion
+                import pipeline
 
                 # Create mock problems
                 mock_problem = notion.NotionProblem(
@@ -261,7 +276,7 @@ class TestSyncNotionProblems:
                     title="Test Problem",
                     description="Test description",
                     status="Open",
-                    feedback_count=0
+                    feedback_count=0,
                 )
 
                 # Setup mocks
@@ -283,7 +298,9 @@ class TestSyncNotionProblems:
 
                 # Verify calls
                 mock_notion_instance.get_all_problems.assert_called_once()
-                mock_embedding_instance.refresh_problem_embeddings.assert_called_once_with([mock_problem])
+                mock_embedding_instance.refresh_problem_embeddings.assert_called_once_with(
+                    [mock_problem]
+                )
 
                 print("✓ Test 5 passed: sync_notion_problems success works")
 
@@ -295,13 +312,14 @@ class TestSyncNotionProblems:
         print("Test 6: Testing sync_notion_problems with no problems...")
 
         async def async_test():
-            with patch.dict("sys.modules", get_mock_modules()), \
-                 patch("pipeline.FeedbackExtractor") as mock_extractor, \
-                 patch("pipeline.NotionClient") as mock_notion, \
-                 patch("pipeline.EmbeddingManager") as mock_embedding, \
-                 patch("pipeline.RAGMatcher") as mock_matcher, \
-                 patch("pipeline.MatchingMetrics") as mock_metrics:
-
+            with (
+                patch.dict("sys.modules", get_mock_modules()),
+                patch("pipeline.FeedbackExtractor"),
+                patch("pipeline.NotionClient") as mock_notion,
+                patch("pipeline.EmbeddingManager"),
+                patch("pipeline.RAGMatcher"),
+                patch("pipeline.MatchingMetrics"),
+            ):
                 import pipeline
 
                 # Setup mocks
@@ -330,18 +348,21 @@ class TestSyncNotionProblems:
         print("Test 7: Testing sync_notion_problems error handling...")
 
         async def async_test():
-            with patch.dict("sys.modules", get_mock_modules()), \
-                 patch("pipeline.FeedbackExtractor") as mock_extractor, \
-                 patch("pipeline.NotionClient") as mock_notion, \
-                 patch("pipeline.EmbeddingManager") as mock_embedding, \
-                 patch("pipeline.RAGMatcher") as mock_matcher, \
-                 patch("pipeline.MatchingMetrics") as mock_metrics:
-
+            with (
+                patch.dict("sys.modules", get_mock_modules()),
+                patch("pipeline.FeedbackExtractor"),
+                patch("pipeline.NotionClient") as mock_notion,
+                patch("pipeline.EmbeddingManager"),
+                patch("pipeline.RAGMatcher"),
+                patch("pipeline.MatchingMetrics"),
+            ):
                 import pipeline
 
                 # Setup mocks
                 mock_notion_instance = Mock()
-                mock_notion_instance.get_all_problems = Mock(side_effect=Exception("Notion API Error"))
+                mock_notion_instance.get_all_problems = Mock(
+                    side_effect=Exception("Notion API Error")
+                )
                 mock_notion.return_value = mock_notion_instance
 
                 pipe = pipeline.FeedbackPipeline()
@@ -366,15 +387,16 @@ class TestBatchProcessTranscripts:
         print("Test 8: Testing batch_process_transcripts success...")
 
         async def async_test():
-            with patch.dict("sys.modules", get_mock_modules()), \
-                 patch("pipeline.FeedbackExtractor") as mock_extractor, \
-                 patch("pipeline.NotionClient") as mock_notion, \
-                 patch("pipeline.EmbeddingManager") as mock_embedding, \
-                 patch("pipeline.RAGMatcher") as mock_matcher, \
-                 patch("pipeline.MatchingMetrics") as mock_metrics, \
-                 patch("pathlib.Path.mkdir") as mock_mkdir, \
-                 patch("builtins.open", mock_open()) as mock_file:
-
+            with (
+                patch.dict("sys.modules", get_mock_modules()),
+                patch("pipeline.FeedbackExtractor"),
+                patch("pipeline.NotionClient") as mock_notion,
+                patch("pipeline.EmbeddingManager") as mock_embedding,
+                patch("pipeline.RAGMatcher"),
+                patch("pipeline.MatchingMetrics") as mock_metrics,
+                patch("pathlib.Path.mkdir"),
+                patch("builtins.open", mock_open()),
+            ):
                 import pipeline
 
                 # Setup mocks for sync
@@ -392,27 +414,29 @@ class TestBatchProcessTranscripts:
 
                 # Mock process_transcript method
                 pipe = pipeline.FeedbackPipeline()
-                pipe.process_transcript = AsyncMock(side_effect=[
-                    {
-                        "transcript_id": "test-1",
-                        "feedbacks_extracted": 2,
-                        "matches_found": 1,
-                        "problems_updated": 1,
-                        "status": "completed"
-                    },
-                    {
-                        "transcript_id": "test-2",
-                        "feedbacks_extracted": 1,
-                        "matches_found": 0,
-                        "problems_updated": 0,
-                        "status": "completed"
-                    }
-                ])
+                pipe.process_transcript = AsyncMock(
+                    side_effect=[
+                        {
+                            "transcript_id": "test-1",
+                            "feedbacks_extracted": 2,
+                            "matches_found": 1,
+                            "problems_updated": 1,
+                            "status": "completed",
+                        },
+                        {
+                            "transcript_id": "test-2",
+                            "feedbacks_extracted": 1,
+                            "matches_found": 0,
+                            "problems_updated": 0,
+                            "status": "completed",
+                        },
+                    ]
+                )
 
                 # Test data
                 transcripts = [
                     {"id": "test-1", "content": "First transcript content"},
-                    {"id": "test-2", "content": "Second transcript content"}
+                    {"id": "test-2", "content": "Second transcript content"},
                 ]
 
                 # Test batch processing
@@ -423,7 +447,7 @@ class TestBatchProcessTranscripts:
                 assert result["total_feedbacks"] == 3
                 assert result["total_matches"] == 1
                 assert result["total_updates"] == 1
-                assert result["success_rate"] == 1/3  # 1 match out of 3 feedbacks
+                assert result["success_rate"] == 1 / 3  # 1 match out of 3 feedbacks
                 assert len(result["results"]) == 2
                 assert "metrics_file" in result
 
@@ -441,13 +465,14 @@ class TestBatchProcessTranscripts:
         print("Test 9: Testing batch_process_transcripts with empty content...")
 
         async def async_test():
-            with patch.dict("sys.modules", get_mock_modules()), \
-                 patch("pipeline.FeedbackExtractor") as mock_extractor, \
-                 patch("pipeline.NotionClient") as mock_notion, \
-                 patch("pipeline.EmbeddingManager") as mock_embedding, \
-                 patch("pipeline.RAGMatcher") as mock_matcher, \
-                 patch("pipeline.MatchingMetrics") as mock_metrics:
-
+            with (
+                patch.dict("sys.modules", get_mock_modules()),
+                patch("pipeline.FeedbackExtractor"),
+                patch("pipeline.NotionClient") as mock_notion,
+                patch("pipeline.EmbeddingManager") as mock_embedding,
+                patch("pipeline.RAGMatcher"),
+                patch("pipeline.MatchingMetrics") as mock_metrics,
+            ):
                 import pipeline
 
                 # Setup mocks for sync
@@ -464,22 +489,24 @@ class TestBatchProcessTranscripts:
                 mock_metrics.return_value = mock_metrics_instance
 
                 pipe = pipeline.FeedbackPipeline()
-                pipe.process_transcript = AsyncMock(return_value={
-                    "transcript_id": "test-1",
-                    "feedbacks_extracted": 1,
-                    "matches_found": 0,
-                    "problems_updated": 0,
-                    "status": "completed"
-                })
+                pipe.process_transcript = AsyncMock(
+                    return_value={
+                        "transcript_id": "test-1",
+                        "feedbacks_extracted": 1,
+                        "matches_found": 0,
+                        "problems_updated": 0,
+                        "status": "completed",
+                    }
+                )
 
                 # Test data with empty content
                 transcripts = [
                     {"id": "test-1", "content": "Valid content"},
-                    {"id": "test-2", "content": ""}  # Empty content - should be skipped
+                    {"id": "test-2", "content": ""},  # Empty content - should be skipped
                 ]
 
                 # Test batch processing
-                result = await pipe.batch_process_transcripts(transcripts)
+                await pipe.batch_process_transcripts(transcripts)
 
                 # Only one transcript should be processed (the valid one)
                 assert pipe.process_transcript.call_count == 1
@@ -499,20 +526,22 @@ class TestProcessFeedbacks:
         print("Test 10: Testing process_feedbacks with low confidence match...")
 
         async def async_test():
-            with patch.dict("sys.modules", get_mock_modules()), \
-                 patch("config.settings") as mock_settings:
-
+            with (
+                patch.dict("sys.modules", get_mock_modules()),
+                patch("config.settings") as mock_settings,
+            ):
                 # Setup settings first
                 mock_settings.confidence_threshold = 0.8  # High threshold
 
-                with patch("pipeline.FeedbackExtractor") as mock_extractor, \
-                     patch("pipeline.NotionClient") as mock_notion, \
-                     patch("pipeline.EmbeddingManager") as mock_embedding, \
-                     patch("pipeline.RAGMatcher") as mock_matcher, \
-                     patch("pipeline.MatchingMetrics") as mock_metrics:
-
-                    import pipeline
+                with (
+                    patch("pipeline.FeedbackExtractor"),
+                    patch("pipeline.NotionClient") as mock_notion,
+                    patch("pipeline.EmbeddingManager"),
+                    patch("pipeline.RAGMatcher") as mock_matcher,
+                    patch("pipeline.MatchingMetrics") as mock_metrics,
+                ):
                     import extract
+                    import pipeline
 
                     # Create mock feedback
                     mock_feedback = extract.Feedback(
@@ -522,7 +551,7 @@ class TestProcessFeedbacks:
                         confidence=0.9,
                         transcript_id="low-conf-transcript",
                         timestamp=datetime.now(),
-                        context="Test context"
+                        context="Test context",
                     )
 
                     # Create mock match with low confidence
@@ -556,7 +585,9 @@ class TestProcessFeedbacks:
 
                     # Verify no update was made due to low confidence
                     mock_notion_instance.update_problem_with_feedback.assert_not_called()
-                    mock_metrics_instance.add_result.assert_called_once_with(mock_feedback, mock_match)
+                    mock_metrics_instance.add_result.assert_called_once_with(
+                        mock_feedback, mock_match
+                    )
 
                     print("✓ Test 10 passed: process_feedbacks with low confidence match works")
 
@@ -568,20 +599,22 @@ class TestProcessFeedbacks:
         print("Test 11: Testing process_feedbacks with no match...")
 
         async def async_test():
-            with patch.dict("sys.modules", get_mock_modules()), \
-                 patch("config.settings") as mock_settings:
-
+            with (
+                patch.dict("sys.modules", get_mock_modules()),
+                patch("config.settings") as mock_settings,
+            ):
                 # Setup settings first
                 mock_settings.confidence_threshold = 0.7
 
-                with patch("pipeline.FeedbackExtractor") as mock_extractor, \
-                     patch("pipeline.NotionClient") as mock_notion, \
-                     patch("pipeline.EmbeddingManager") as mock_embedding, \
-                     patch("pipeline.RAGMatcher") as mock_matcher, \
-                     patch("pipeline.MatchingMetrics") as mock_metrics:
-
-                    import pipeline
+                with (
+                    patch("pipeline.FeedbackExtractor"),
+                    patch("pipeline.NotionClient") as mock_notion,
+                    patch("pipeline.EmbeddingManager"),
+                    patch("pipeline.RAGMatcher") as mock_matcher,
+                    patch("pipeline.MatchingMetrics") as mock_metrics,
+                ):
                     import extract
+                    import pipeline
 
                     # Create mock feedback
                     mock_feedback = extract.Feedback(
@@ -591,7 +624,7 @@ class TestProcessFeedbacks:
                         confidence=0.8,
                         transcript_id="no-match-transcript",
                         timestamp=datetime.now(),
-                        context="Test context"
+                        context="Test context",
                     )
 
                     # Setup mocks for no match
@@ -629,20 +662,22 @@ class TestProcessFeedbacks:
         print("Test 12: Testing process_feedbacks error handling...")
 
         async def async_test():
-            with patch.dict("sys.modules", get_mock_modules()), \
-                 patch("config.settings") as mock_settings:
-
+            with (
+                patch.dict("sys.modules", get_mock_modules()),
+                patch("config.settings") as mock_settings,
+            ):
                 # Setup settings first
                 mock_settings.confidence_threshold = 0.7
 
-                with patch("pipeline.FeedbackExtractor") as mock_extractor, \
-                     patch("pipeline.NotionClient") as mock_notion, \
-                     patch("pipeline.EmbeddingManager") as mock_embedding, \
-                     patch("pipeline.RAGMatcher") as mock_matcher, \
-                     patch("pipeline.MatchingMetrics") as mock_metrics:
-
-                    import pipeline
+                with (
+                    patch("pipeline.FeedbackExtractor"),
+                    patch("pipeline.NotionClient"),
+                    patch("pipeline.EmbeddingManager"),
+                    patch("pipeline.RAGMatcher") as mock_matcher,
+                    patch("pipeline.MatchingMetrics") as mock_metrics,
+                ):
                     import extract
+                    import pipeline
 
                     # Create mock feedback
                     mock_feedback = extract.Feedback(
@@ -652,12 +687,14 @@ class TestProcessFeedbacks:
                         confidence=0.8,
                         transcript_id="error-transcript",
                         timestamp=datetime.now(),
-                        context="Test context"
+                        context="Test context",
                     )
 
                     # Setup mocks to raise exception
                     mock_matcher_instance = Mock()
-                    mock_matcher_instance.find_best_match = AsyncMock(side_effect=Exception("Matching error"))
+                    mock_matcher_instance.find_best_match = AsyncMock(
+                        side_effect=Exception("Matching error")
+                    )
                     mock_matcher.return_value = mock_matcher_instance
 
                     mock_metrics_instance = Mock()
@@ -722,5 +759,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

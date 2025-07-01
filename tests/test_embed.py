@@ -28,7 +28,7 @@ class TestEmbeddingDocument:
             content="test content",
             embedding=[0.1, 0.2, 0.3],
             metadata={"type": "test"},
-            doc_type="feedback"
+            doc_type="feedback",
         )
 
         assert doc.id == "test_id"
@@ -49,6 +49,7 @@ class TestVectorStoreInterface:
     @pytest.mark.asyncio
     async def test_abstract_methods_raise_not_implemented(self):
         """Test that abstract methods raise NotImplementedError."""
+
         # Create a minimal implementation to test abstract methods
         class TestVectorStore(VectorStore):
             pass
@@ -68,19 +69,19 @@ class TestChromaDBVectorStore:
                 content="test content 1",
                 embedding=[0.1, 0.2, 0.3],
                 metadata={"type": "feedback"},
-                doc_type="feedback"
+                doc_type="feedback",
             ),
             EmbeddingDocument(
                 id="doc2",
                 content="test content 2",
                 embedding=[0.4, 0.5, 0.6],
                 metadata={"type": "problem"},
-                doc_type="problem"
-            )
+                doc_type="problem",
+            ),
         ]
 
-    @patch('embed.chromadb')
-    @patch('embed.settings')
+    @patch("embed.chromadb")
+    @patch("embed.settings")
     def test_chromadb_init_local(self, mock_settings, mock_chromadb):
         """Test ChromaDB initialization with local settings."""
         mock_settings.chromadb_host = "localhost"
@@ -99,8 +100,8 @@ class TestChromaDBVectorStore:
         assert store.collection == mock_collection
         mock_chromadb.PersistentClient.assert_called_once()
 
-    @patch('embed.chromadb')
-    @patch('embed.settings')
+    @patch("embed.chromadb")
+    @patch("embed.settings")
     def test_chromadb_init_remote(self, mock_settings, mock_chromadb):
         """Test ChromaDB initialization with remote settings."""
         mock_settings.chromadb_host = "remote-host"
@@ -118,14 +119,14 @@ class TestChromaDBVectorStore:
         assert store.collection == mock_collection
         mock_chromadb.HttpClient.assert_called_once()
 
-    @patch('embed.chromadb', None)
+    @patch("embed.chromadb", None)
     def test_chromadb_init_not_available(self):
         """Test ChromaDB initialization when package not available."""
         with pytest.raises(ImportError, match="ChromaDB not available"):
             ChromaDBVectorStore()
 
-    @patch('embed.chromadb')
-    @patch('embed.settings')
+    @patch("embed.chromadb")
+    @patch("embed.settings")
     @pytest.mark.asyncio
     async def test_add_documents_success(self, mock_settings, mock_chromadb):
         """Test successful document addition to ChromaDB."""
@@ -152,9 +153,9 @@ class TestChromaDBVectorStore:
         assert len(call_args[1]["metadatas"]) == 2
         assert len(call_args[1]["documents"]) == 2
 
-    @patch('embed.chromadb')
-    @patch('embed.settings')
-    @patch('embed.logger')
+    @patch("embed.chromadb")
+    @patch("embed.settings")
+    @patch("embed.logger")
     @pytest.mark.asyncio
     async def test_add_documents_failure(self, mock_logger, mock_settings, mock_chromadb):
         """Test document addition failure handling."""
@@ -175,8 +176,8 @@ class TestChromaDBVectorStore:
         assert result is False
         mock_logger.error.assert_called_with("Error adding documents to ChromaDB: Database error")
 
-    @patch('embed.chromadb')
-    @patch('embed.settings')
+    @patch("embed.chromadb")
+    @patch("embed.settings")
     @pytest.mark.asyncio
     async def test_search_success(self, mock_settings, mock_chromadb):
         """Test successful document search in ChromaDB."""
@@ -191,7 +192,7 @@ class TestChromaDBVectorStore:
             "ids": [["doc1", "doc2"]],
             "documents": [["content1", "content2"]],
             "metadatas": [[{"type": "feedback"}, {"type": "problem"}]],
-            "distances": [[0.1, 0.2]]
+            "distances": [[0.1, 0.2]],
         }
         mock_chromadb.PersistentClient.return_value = mock_client
         mock_client.get_or_create_collection.return_value = mock_collection
@@ -206,8 +207,8 @@ class TestChromaDBVectorStore:
         assert results[1]["id"] == "doc2"
         assert results[1]["score"] == 0.8  # 1 - 0.2
 
-    @patch('embed.chromadb')
-    @patch('embed.settings')
+    @patch("embed.chromadb")
+    @patch("embed.settings")
     @pytest.mark.asyncio
     async def test_search_empty_results(self, mock_settings, mock_chromadb):
         """Test search with empty results."""
@@ -218,7 +219,12 @@ class TestChromaDBVectorStore:
 
         mock_client = Mock()
         mock_collection = Mock()
-        mock_collection.query.return_value = {"ids": [], "documents": [], "metadatas": [], "distances": []}
+        mock_collection.query.return_value = {
+            "ids": [],
+            "documents": [],
+            "metadatas": [],
+            "distances": [],
+        }
         mock_chromadb.PersistentClient.return_value = mock_client
         mock_client.get_or_create_collection.return_value = mock_collection
 
@@ -227,8 +233,8 @@ class TestChromaDBVectorStore:
 
         assert results == []
 
-    @patch('embed.chromadb')
-    @patch('embed.settings')
+    @patch("embed.chromadb")
+    @patch("embed.settings")
     @pytest.mark.asyncio
     async def test_delete_documents_success(self, mock_settings, mock_chromadb):
         """Test successful document deletion."""
@@ -260,11 +266,11 @@ class TestPineconeVectorStore:
                 content="test content 1",
                 embedding=[0.1, 0.2, 0.3],
                 metadata={"type": "feedback"},
-                doc_type="feedback"
+                doc_type="feedback",
             )
         ]
 
-    @patch('embed.settings')
+    @patch("embed.settings")
     def test_pinecone_init_no_api_key(self, mock_settings):
         """Test Pinecone initialization without API key."""
         mock_settings.pinecone_api_key = None
@@ -272,8 +278,8 @@ class TestPineconeVectorStore:
         with pytest.raises(ValueError, match="Pinecone API key not configured"):
             PineconeVectorStore()
 
-    @patch('embed.Pinecone', None)
-    @patch('embed.settings')
+    @patch("embed.Pinecone", None)
+    @patch("embed.settings")
     def test_pinecone_init_not_available(self, mock_settings):
         """Test Pinecone initialization when package not available."""
         mock_settings.pinecone_api_key = "test-key"
@@ -281,8 +287,8 @@ class TestPineconeVectorStore:
         with pytest.raises(ImportError, match="Pinecone not available"):
             PineconeVectorStore()
 
-    @patch('embed.Pinecone')
-    @patch('embed.settings')
+    @patch("embed.Pinecone")
+    @patch("embed.settings")
     def test_pinecone_init_success(self, mock_settings, mock_pinecone_class):
         """Test successful Pinecone initialization."""
         mock_settings.pinecone_api_key = "test-key"
@@ -301,8 +307,8 @@ class TestPineconeVectorStore:
         assert store.index == mock_index
         mock_pinecone_class.assert_called_once_with(api_key="test-key")
 
-    @patch('embed.Pinecone')
-    @patch('embed.settings')
+    @patch("embed.Pinecone")
+    @patch("embed.settings")
     @pytest.mark.asyncio
     async def test_add_documents_success(self, mock_settings, mock_pinecone_class):
         """Test successful document addition to Pinecone."""
@@ -321,8 +327,8 @@ class TestPineconeVectorStore:
         assert result is True
         mock_index.upsert.assert_called_once()
 
-    @patch('embed.Pinecone')
-    @patch('embed.settings')
+    @patch("embed.Pinecone")
+    @patch("embed.settings")
     @pytest.mark.asyncio
     async def test_search_success(self, mock_settings, mock_pinecone_class):
         """Test successful document search in Pinecone."""
@@ -348,8 +354,8 @@ class TestPineconeVectorStore:
         assert results[0]["id"] == "doc1"
         assert results[0]["score"] == 0.95
 
-    @patch('embed.Pinecone')
-    @patch('embed.settings')
+    @patch("embed.Pinecone")
+    @patch("embed.settings")
     @pytest.mark.asyncio
     async def test_delete_documents_success(self, mock_settings, mock_pinecone_class):
         """Test successful document deletion from Pinecone."""
@@ -368,9 +374,9 @@ class TestPineconeVectorStore:
         assert result is True
         mock_index.delete.assert_called_once_with(ids=["doc1", "doc2"])
 
-    @patch('embed.Pinecone')
-    @patch('embed.settings')
-    @patch('embed.logger')
+    @patch("embed.Pinecone")
+    @patch("embed.settings")
+    @patch("embed.logger")
     @pytest.mark.asyncio
     async def test_delete_documents_failure(self, mock_logger, mock_settings, mock_pinecone_class):
         """Test document deletion failure in Pinecone."""
@@ -390,9 +396,9 @@ class TestPineconeVectorStore:
         assert result is False
         mock_logger.error.assert_called_with("Error deleting documents from Pinecone: Delete error")
 
-    @patch('embed.Pinecone')
-    @patch('embed.settings')
-    @patch('embed.logger')
+    @patch("embed.Pinecone")
+    @patch("embed.settings")
+    @patch("embed.logger")
     @pytest.mark.asyncio
     async def test_search_failure(self, mock_logger, mock_settings, mock_pinecone_class):
         """Test search failure in Pinecone."""
@@ -412,9 +418,9 @@ class TestPineconeVectorStore:
         assert results == []
         mock_logger.error.assert_called_with("Error searching Pinecone: Search error")
 
-    @patch('embed.Pinecone')
-    @patch('embed.settings')
-    @patch('embed.logger')
+    @patch("embed.Pinecone")
+    @patch("embed.settings")
+    @patch("embed.logger")
     @pytest.mark.asyncio
     async def test_add_documents_failure(self, mock_logger, mock_settings, mock_pinecone_class):
         """Test document addition failure in Pinecone."""
@@ -434,8 +440,8 @@ class TestPineconeVectorStore:
         assert result is False
         mock_logger.error.assert_called_with("Error adding documents to Pinecone: Upsert error")
 
-    @patch('embed.Pinecone')
-    @patch('embed.settings')
+    @patch("embed.Pinecone")
+    @patch("embed.settings")
     def test_ensure_index_exists_create_new(self, mock_settings, mock_pinecone_class):
         """Test creating a new Pinecone index when it doesn't exist."""
         mock_settings.pinecone_api_key = "test-key"
@@ -446,7 +452,7 @@ class TestPineconeVectorStore:
         mock_pc.list_indexes.return_value = []  # No existing indexes
         mock_pinecone_class.return_value = mock_pc
 
-        store = PineconeVectorStore()
+        PineconeVectorStore()
 
         mock_pc.create_index.assert_called_once_with(
             name="new-index",
@@ -455,8 +461,8 @@ class TestPineconeVectorStore:
             spec={"serverless": {"cloud": "aws", "region": "us-east-1"}},
         )
 
-    @patch('embed.Pinecone')
-    @patch('embed.settings')
+    @patch("embed.Pinecone")
+    @patch("embed.settings")
     def test_ensure_index_exists_use_existing(self, mock_settings, mock_pinecone_class):
         """Test using existing Pinecone index."""
         mock_settings.pinecone_api_key = "test-key"
@@ -466,12 +472,12 @@ class TestPineconeVectorStore:
         mock_pc.list_indexes.return_value = [Mock(name="existing-index")]
         mock_pinecone_class.return_value = mock_pc
 
-        store = PineconeVectorStore()
+        PineconeVectorStore()
 
         mock_pc.create_index.assert_not_called()
 
-    @patch('embed.Pinecone')
-    @patch('embed.settings')
+    @patch("embed.Pinecone")
+    @patch("embed.settings")
     def test_ensure_index_exists_error(self, mock_settings, mock_pinecone_class):
         """Test error handling in _ensure_index_exists."""
         mock_settings.pinecone_api_key = "test-key"
@@ -484,8 +490,8 @@ class TestPineconeVectorStore:
         with pytest.raises(Exception, match="API error"):
             PineconeVectorStore()
 
-    @patch('embed.Pinecone')
-    @patch('embed.settings')
+    @patch("embed.Pinecone")
+    @patch("embed.settings")
     @pytest.mark.asyncio
     async def test_add_documents_large_batch(self, mock_settings, mock_pinecone_class):
         """Test adding documents in batches when there are many documents."""
@@ -500,7 +506,7 @@ class TestPineconeVectorStore:
                 content=f"content {i}",
                 embedding=[0.1, 0.2, 0.3],
                 metadata={"index": i},
-                doc_type="test"
+                doc_type="test",
             )
             large_doc_list.append(doc)
 
@@ -529,13 +535,13 @@ class TestChromaDBVectorStoreErrorHandling:
                 content="test content",
                 embedding=[0.1, 0.2, 0.3],
                 metadata={"type": "test"},
-                doc_type="test"
+                doc_type="test",
             )
         ]
 
-    @patch('embed.chromadb')
-    @patch('embed.settings')
-    @patch('embed.logger')
+    @patch("embed.chromadb")
+    @patch("embed.settings")
+    @patch("embed.logger")
     @pytest.mark.asyncio
     async def test_search_failure(self, mock_logger, mock_settings, mock_chromadb):
         """Test search failure handling in ChromaDB."""
@@ -556,9 +562,9 @@ class TestChromaDBVectorStoreErrorHandling:
         assert results == []
         mock_logger.error.assert_called_with("Error searching ChromaDB: Query error")
 
-    @patch('embed.chromadb')
-    @patch('embed.settings')
-    @patch('embed.logger')
+    @patch("embed.chromadb")
+    @patch("embed.settings")
+    @patch("embed.logger")
     @pytest.mark.asyncio
     async def test_delete_documents_failure(self, mock_logger, mock_settings, mock_chromadb):
         """Test delete documents failure handling in ChromaDB."""
@@ -592,7 +598,7 @@ class TestEmbeddingManager:
             confidence=0.8,
             context="Test context",
             transcript_id="test_transcript",
-            timestamp=datetime.datetime.now()
+            timestamp=datetime.datetime.now(),
         )
 
         self.sample_problem = NotionProblem(
@@ -604,18 +610,18 @@ class TestEmbeddingManager:
             tags=["bug", "ui"],
             feedback_count=5,
             feedbacks=["Feedback 1", "Feedback 2"],
-            last_updated=datetime.datetime.now()
+            last_updated=datetime.datetime.now(),
         )
 
-    @patch('embed.get_llm_client')
-    @patch('embed.settings')
+    @patch("embed.get_llm_client")
+    @patch("embed.settings")
     def test_embedding_manager_init(self, mock_settings, mock_get_llm_client):
         """Test EmbeddingManager initialization."""
         mock_settings.vector_store = "chromadb"
         mock_llm_client = Mock()
         mock_get_llm_client.return_value = mock_llm_client
 
-        with patch('embed.ChromaDBVectorStore') as mock_chroma:
+        with patch("embed.ChromaDBVectorStore") as mock_chroma:
             mock_vector_store = Mock()
             mock_chroma.return_value = mock_vector_store
 
@@ -624,8 +630,8 @@ class TestEmbeddingManager:
             assert manager.llm_client == mock_llm_client
             assert manager.vector_store == mock_vector_store
 
-    @patch('embed.get_llm_client')
-    @patch('embed.settings', None)
+    @patch("embed.get_llm_client")
+    @patch("embed.settings", None)
     def test_embedding_manager_init_no_settings(self, mock_get_llm_client):
         """Test EmbeddingManager initialization without settings (test mode)."""
         mock_llm_client = Mock()
@@ -636,8 +642,8 @@ class TestEmbeddingManager:
         assert manager.llm_client == mock_llm_client
         # Should return a mock vector store for test environments
 
-    @patch('embed.get_llm_client')
-    @patch('embed.settings')
+    @patch("embed.get_llm_client")
+    @patch("embed.settings")
     def test_get_vector_store_unsupported(self, mock_settings, mock_get_llm_client):
         """Test _get_vector_store with unsupported vector store."""
         mock_settings.vector_store = "unsupported"
@@ -646,9 +652,9 @@ class TestEmbeddingManager:
         with pytest.raises(ValueError, match="Unsupported vector store: unsupported"):
             EmbeddingManager()
 
-    @patch('embed.get_llm_client')
-    @patch('embed.settings')
-    @patch('embed.uuid.uuid4')
+    @patch("embed.get_llm_client")
+    @patch("embed.settings")
+    @patch("embed.uuid.uuid4")
     @pytest.mark.asyncio
     async def test_embed_feedbacks(self, mock_uuid, mock_settings, mock_get_llm_client):
         """Test embedding feedback documents."""
@@ -658,7 +664,7 @@ class TestEmbeddingManager:
         mock_get_llm_client.return_value = mock_llm_client
         mock_uuid.return_value.hex = "abcd1234"
 
-        with patch('embed.ChromaDBVectorStore'):
+        with patch("embed.ChromaDBVectorStore"):
             manager = EmbeddingManager()
             documents = await manager.embed_feedbacks([self.sample_feedback])
 
@@ -671,8 +677,8 @@ class TestEmbeddingManager:
             assert doc.metadata["type"] == "feature_request"
             assert doc.metadata["transcript_id"] == "test_transcript"
 
-    @patch('embed.get_llm_client')
-    @patch('embed.settings')
+    @patch("embed.get_llm_client")
+    @patch("embed.settings")
     @pytest.mark.asyncio
     async def test_embed_problems(self, mock_settings, mock_get_llm_client):
         """Test embedding problem documents."""
@@ -681,7 +687,7 @@ class TestEmbeddingManager:
         mock_llm_client.embed.return_value = [[0.4, 0.5, 0.6]]
         mock_get_llm_client.return_value = mock_llm_client
 
-        with patch('embed.ChromaDBVectorStore'):
+        with patch("embed.ChromaDBVectorStore"):
             manager = EmbeddingManager()
             documents = await manager.embed_problems([self.sample_problem])
 
@@ -698,17 +704,13 @@ class TestEmbeddingManager:
             assert doc.metadata["status"] == "Open"
             assert doc.metadata["tags"] == "bug,ui"
 
-    @patch('embed.get_llm_client')
-    @patch('embed.settings')
+    @patch("embed.get_llm_client")
+    @patch("embed.settings")
     @pytest.mark.asyncio
     async def test_embed_problems_no_feedbacks(self, mock_settings, mock_get_llm_client):
         """Test embedding problems without customer feedbacks."""
         problem_without_feedbacks = NotionProblem(
-            id="test_id",
-            title="Test",
-            description="Description",
-            status="Open",
-            feedbacks=None
+            id="test_id", title="Test", description="Description", status="Open", feedbacks=None
         )
 
         mock_settings.vector_store = "chromadb"
@@ -716,7 +718,7 @@ class TestEmbeddingManager:
         mock_llm_client.embed.return_value = [[0.1, 0.2, 0.3]]
         mock_get_llm_client.return_value = mock_llm_client
 
-        with patch('embed.ChromaDBVectorStore'):
+        with patch("embed.ChromaDBVectorStore"):
             manager = EmbeddingManager()
             documents = await manager.embed_problems([problem_without_feedbacks])
 
@@ -724,8 +726,8 @@ class TestEmbeddingManager:
             doc = documents[0]
             assert "Customer Feedbacks:" not in doc.content
 
-    @patch('embed.get_llm_client')
-    @patch('embed.settings')
+    @patch("embed.get_llm_client")
+    @patch("embed.settings")
     @pytest.mark.asyncio
     async def test_store_embeddings(self, mock_settings, mock_get_llm_client):
         """Test storing embedding documents."""
@@ -735,13 +737,12 @@ class TestEmbeddingManager:
         mock_vector_store = AsyncMock()
         mock_vector_store.add_documents.return_value = True
 
-        with patch('embed.ChromaDBVectorStore', return_value=mock_vector_store):
+        with patch("embed.ChromaDBVectorStore", return_value=mock_vector_store):
             manager = EmbeddingManager()
 
             test_docs = [
                 EmbeddingDocument(
-                    id="test", content="test", embedding=[0.1],
-                    metadata={}, doc_type="test"
+                    id="test", content="test", embedding=[0.1], metadata={}, doc_type="test"
                 )
             ]
 
@@ -750,8 +751,8 @@ class TestEmbeddingManager:
             assert result is True
             mock_vector_store.add_documents.assert_called_once_with(test_docs)
 
-    @patch('embed.get_llm_client')
-    @patch('embed.settings')
+    @patch("embed.get_llm_client")
+    @patch("embed.settings")
     @pytest.mark.asyncio
     async def test_search_similar_problems(self, mock_settings, mock_get_llm_client):
         """Test searching for similar problems."""
@@ -764,10 +765,10 @@ class TestEmbeddingManager:
         mock_vector_store.search.return_value = [
             {"id": "problem_1", "doc_type": "problem", "score": 0.9},
             {"id": "feedback_1", "doc_type": "feedback", "score": 0.8},
-            {"id": "problem_2", "metadata": {"notion_id": "abc"}, "score": 0.7}
+            {"id": "problem_2", "metadata": {"notion_id": "abc"}, "score": 0.7},
         ]
 
-        with patch('embed.ChromaDBVectorStore', return_value=mock_vector_store):
+        with patch("embed.ChromaDBVectorStore", return_value=mock_vector_store):
             manager = EmbeddingManager()
 
             results = await manager.search_similar_problems("test feedback")
@@ -780,11 +781,13 @@ class TestEmbeddingManager:
             mock_llm_client.embed.assert_called_once_with(["test feedback"])
             mock_vector_store.search.assert_called_once_with([0.1, 0.2, 0.3], 5)
 
-    @patch('embed.get_llm_client')
-    @patch('embed.settings')
-    @patch('embed.datetime')
+    @patch("embed.get_llm_client")
+    @patch("embed.settings")
+    @patch("embed.datetime")
     @pytest.mark.asyncio
-    async def test_refresh_problem_embeddings_success(self, mock_datetime, mock_settings, mock_get_llm_client):
+    async def test_refresh_problem_embeddings_success(
+        self, mock_datetime, mock_settings, mock_get_llm_client
+    ):
         """Test successful refresh of problem embeddings."""
         mock_settings.vector_store = "chromadb"
         mock_llm_client = AsyncMock()
@@ -798,7 +801,7 @@ class TestEmbeddingManager:
         mock_vector_store.delete_documents.return_value = True
         mock_vector_store.add_documents.return_value = True
 
-        with patch('embed.ChromaDBVectorStore', return_value=mock_vector_store):
+        with patch("embed.ChromaDBVectorStore", return_value=mock_vector_store):
             manager = EmbeddingManager()
 
             result = await manager.refresh_problem_embeddings([self.sample_problem])
@@ -813,11 +816,13 @@ class TestEmbeddingManager:
             assert doc.metadata["refreshed_at"] == mock_now.isoformat()
             assert doc.metadata["source"] == "notion_refresh"
 
-    @patch('embed.get_llm_client')
-    @patch('embed.settings')
-    @patch('embed.logger')
+    @patch("embed.get_llm_client")
+    @patch("embed.settings")
+    @patch("embed.logger")
     @pytest.mark.asyncio
-    async def test_refresh_problem_embeddings_failure(self, mock_logger, mock_settings, mock_get_llm_client):
+    async def test_refresh_problem_embeddings_failure(
+        self, mock_logger, mock_settings, mock_get_llm_client
+    ):
         """Test refresh problem embeddings with failure."""
         mock_settings.vector_store = "chromadb"
         mock_get_llm_client.return_value = Mock()
@@ -825,10 +830,12 @@ class TestEmbeddingManager:
         mock_vector_store = AsyncMock()
         mock_vector_store.delete_documents.side_effect = Exception("Database error")
 
-        with patch('embed.ChromaDBVectorStore', return_value=mock_vector_store):
+        with patch("embed.ChromaDBVectorStore", return_value=mock_vector_store):
             manager = EmbeddingManager()
 
             result = await manager.refresh_problem_embeddings([self.sample_problem])
 
             assert result is False
-            mock_logger.error.assert_called_with("Error refreshing problem embeddings: Database error")
+            mock_logger.error.assert_called_with(
+                "Error refreshing problem embeddings: Database error"
+            )

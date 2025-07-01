@@ -187,7 +187,7 @@ def test_feedback_models():
             feedback_request = FeedbackRequest(
                 content="We need better export functionality",
                 confidence=0.85,
-                type="feature_request"
+                type="feature_request",
             )
             assert feedback_request.content == "We need better export functionality"
             assert feedback_request.confidence == 0.85
@@ -206,7 +206,7 @@ def test_feedback_models():
                 similarity_score=0.88,
                 reasoning="Strong match for export functionality",
                 status="completed",
-                processing_time=1.2
+                processing_time=1.2,
             )
             assert feedback_response_with_match.feedback_id == "test-123"
             assert feedback_response_with_match.match_found is True
@@ -221,7 +221,7 @@ def test_feedback_models():
                 confidence=0.75,
                 match_found=False,
                 status="completed",
-                processing_time=0.8
+                processing_time=0.8,
             )
             assert feedback_response_no_match.feedback_id == "test-456"
             assert feedback_response_no_match.match_found is False
@@ -244,9 +244,7 @@ def test_feedback_processing_endpoint():
 
             # Test model creation and validation
             request = FeedbackRequest(
-                content="We need to export data to Excel",
-                confidence=0.85,
-                type="feature_request"
+                content="We need to export data to Excel", confidence=0.85, type="feature_request"
             )
 
             # Verify the request model works correctly
@@ -274,9 +272,7 @@ def test_feedback_validation():
             valid_types = ["feature_request", "customer_pain"]
             for feedback_type in valid_types:
                 request = FeedbackRequest(
-                    content="Test content",
-                    confidence=0.8,
-                    type=feedback_type
+                    content="Test content", confidence=0.8, type=feedback_type
                 )
                 assert request.type == feedback_type
 
@@ -284,9 +280,7 @@ def test_feedback_validation():
             valid_confidences = [0.0, 0.5, 1.0]
             for confidence in valid_confidences:
                 request = FeedbackRequest(
-                    content="Test content",
-                    confidence=confidence,
-                    type="feature_request"
+                    content="Test content", confidence=confidence, type="feature_request"
                 )
                 assert request.confidence == confidence
 

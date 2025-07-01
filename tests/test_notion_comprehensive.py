@@ -7,6 +7,7 @@ import sys
 from datetime import datetime
 from unittest.mock import Mock, patch
 
+
 # Add project to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -43,10 +44,7 @@ class TestNotionProblemDataclass:
             import notion
 
             problem = notion.NotionProblem(
-                id="test-123",
-                title="Test Problem",
-                description="Test description",
-                status="New"
+                id="test-123", title="Test Problem", description="Test description", status="New"
             )
 
             assert problem.id == "test-123"
@@ -78,7 +76,7 @@ class TestNotionProblemDataclass:
                 priority="High",
                 tags=["bug", "urgent"],
                 feedback_count=5,
-                last_updated=test_date
+                last_updated=test_date,
             )
 
             assert problem.id == "test-456"
@@ -99,14 +97,13 @@ class TestNotionClientInitialization:
         """Test 3: NotionClient initialization with no settings (test mode)."""
         print("Test 3: Testing NotionClient initialization with no settings...")
 
-        with patch.dict("sys.modules", get_mock_modules()):
-            with patch("config.settings", None):
-                import notion
+        with patch.dict("sys.modules", get_mock_modules()), patch("config.settings", None):
+            import notion
 
-                client = notion.NotionClient()
+            client = notion.NotionClient()
 
-                assert client.client is None
-                assert client.database_id == "test-db"
+            assert client.client is None
+            assert client.database_id == "test-db"
 
         print("✓ Test 3 passed: NotionClient test mode initialization works")
 
@@ -123,7 +120,7 @@ class TestNotionClientInitialization:
 
                 try:
                     notion.NotionClient()
-                    assert False, "Should have raised ValueError"
+                    raise AssertionError("Should have raised ValueError")
                 except ValueError as e:
                     assert "NOTION_API_KEY not configured" in str(e)
 
@@ -142,7 +139,7 @@ class TestNotionClientInitialization:
 
                 try:
                     notion.NotionClient()
-                    assert False, "Should have raised ValueError"
+                    raise AssertionError("Should have raised ValueError")
                 except ValueError as e:
                     assert "NOTION_DATABASE_ID not configured" in str(e)
 
@@ -153,8 +150,7 @@ class TestNotionClientInitialization:
         print("Test 6: Testing NotionClient initialization with missing notion-client...")
 
         with patch.dict("sys.modules", get_mock_modules()):
-            with patch("config.settings") as mock_settings, \
-                 patch("notion.NotionClientClass", None):
+            with patch("config.settings") as mock_settings, patch("notion.NotionClientClass", None):
                 mock_settings.notion_api_key = "test-key"
                 mock_settings.notion_database_id = "test-db"
 
@@ -162,7 +158,7 @@ class TestNotionClientInitialization:
 
                 try:
                     notion.NotionClient()
-                    assert False, "Should have raised ImportError"
+                    raise AssertionError("Should have raised ImportError")
                 except ImportError as e:
                     assert "notion-client package not installed" in str(e)
 
@@ -173,8 +169,10 @@ class TestNotionClientInitialization:
         print("Test 7: Testing successful NotionClient initialization...")
 
         with patch.dict("sys.modules", get_mock_modules()):
-            with patch("config.settings") as mock_settings, \
-                 patch("notion.NotionClientClass") as mock_notion_class:
+            with (
+                patch("config.settings") as mock_settings,
+                patch("notion.NotionClientClass") as mock_notion_class,
+            ):
                 mock_settings.notion_api_key = "test-key"
                 mock_settings.notion_database_id = "test-db"
 
@@ -200,9 +198,10 @@ class TestNotionPageParsing:
         print("Test 8: Testing minimal Notion page parsing...")
 
         with patch.dict("sys.modules", get_mock_modules()):
-            with patch("config.settings") as mock_settings, \
-                 patch("notion.NotionClientClass") as mock_notion_class:
-
+            with (
+                patch("config.settings") as mock_settings,
+                patch("notion.NotionClientClass") as mock_notion_class,
+            ):
                 mock_settings.notion_api_key = "test-key"
                 mock_settings.notion_database_id = "test-db"
                 mock_notion_class.return_value = Mock()
@@ -217,10 +216,10 @@ class TestNotionPageParsing:
                     "properties": {
                         "Title": {
                             "type": "title",
-                            "title": [{"text": {"content": "Test Problem Title"}}]
+                            "title": [{"text": {"content": "Test Problem Title"}}],
                         }
                     },
-                    "last_edited_time": "2024-01-01T00:00:00.000Z"
+                    "last_edited_time": "2024-01-01T00:00:00.000Z",
                 }
 
                 problem = client._parse_notion_page(page_data)
@@ -241,9 +240,10 @@ class TestNotionPageParsing:
         print("Test 9: Testing complete Notion page parsing...")
 
         with patch.dict("sys.modules", get_mock_modules()):
-            with patch("config.settings") as mock_settings, \
-                 patch("notion.NotionClientClass") as mock_notion_class:
-
+            with (
+                patch("config.settings") as mock_settings,
+                patch("notion.NotionClientClass") as mock_notion_class,
+            ):
                 mock_settings.notion_api_key = "test-key"
                 mock_settings.notion_database_id = "test-db"
                 mock_notion_class.return_value = Mock()
@@ -258,39 +258,31 @@ class TestNotionPageParsing:
                     "properties": {
                         "Title": {
                             "type": "title",
-                            "title": [{"text": {"content": "Complete Test Problem"}}]
+                            "title": [{"text": {"content": "Complete Test Problem"}}],
                         },
                         "Description": {
                             "type": "rich_text",
-                            "rich_text": [{"text": {"content": "This is a test description"}}]
+                            "rich_text": [{"text": {"content": "This is a test description"}}],
                         },
-                        "Status": {
-                            "type": "select",
-                            "select": {"name": "In Progress"}
-                        },
-                        "Priority": {
-                            "type": "select",
-                            "select": {"name": "High"}
-                        },
+                        "Status": {"type": "select", "select": {"name": "In Progress"}},
+                        "Priority": {"type": "select", "select": {"name": "High"}},
                         "Tags": {
                             "type": "multi_select",
-                            "multi_select": [
-                                {"name": "bug"},
-                                {"name": "urgent"}
-                            ]
+                            "multi_select": [{"name": "bug"}, {"name": "urgent"}],
                         },
-                        "Feedback Count": {
-                            "type": "number",
-                            "number": 5
-                        },
+                        "Feedback Count": {"type": "number", "number": 5},
                         "🚀 Customer Feedbacks 1": {
                             "rich_text": [
-                                {"text": {"content": "Customer complaint about feature (call-123)"}},
-                                {"text": {"content": "Another feedback item (call-456)"}}
+                                {
+                                    "text": {
+                                        "content": "Customer complaint about feature (call-123)"
+                                    }
+                                },
+                                {"text": {"content": "Another feedback item (call-456)"}},
                             ]
-                        }
+                        },
                     },
-                    "last_edited_time": "2024-01-01T12:30:00.000Z"
+                    "last_edited_time": "2024-01-01T12:30:00.000Z",
                 }
 
                 problem = client._parse_notion_page(page_data)
@@ -314,9 +306,10 @@ class TestNotionPageParsing:
         print("Test 10: Testing invalid Notion page parsing...")
 
         with patch.dict("sys.modules", get_mock_modules()):
-            with patch("config.settings") as mock_settings, \
-                 patch("notion.NotionClientClass") as mock_notion_class:
-
+            with (
+                patch("config.settings") as mock_settings,
+                patch("notion.NotionClientClass") as mock_notion_class,
+            ):
                 mock_settings.notion_api_key = "test-key"
                 mock_settings.notion_database_id = "test-db"
                 mock_notion_class.return_value = Mock()
@@ -353,10 +346,7 @@ class TestNotionPageParsing:
                 "id": "page-123",
                 "last_edited_time": "2024-01-15T10:30:00Z",
                 "properties": {
-                    "Name": {
-                        "type": "title",
-                        "title": [{"text": {"content": "Test Problem"}}]
-                    },
+                    "Name": {"type": "title", "title": [{"text": {"content": "Test Problem"}}]},
                     "🚀 Customer Feedbacks 1": {
                         "rich_text": [
                             {"text": {"content": "First feedback (2024-01-01)"}},
@@ -367,19 +357,19 @@ class TestNotionPageParsing:
                     },
                     "Description": {
                         "type": "rich_text",
-                        "rich_text": [{"text": {"content": "Test description"}}]
+                        "rich_text": [{"text": {"content": "Test description"}}],
                     },
-                    "Status": {
-                        "type": "select",
-                        "select": {"name": "Open"}
-                    }
-                }
+                    "Status": {"type": "select", "select": {"name": "Open"}},
+                },
             }
 
             result = client._parse_notion_page(page_data)
 
             assert result is not None
-            assert result.feedbacks == ["First feedback", "Third feedback"]  # Only those with parentheses, empty excluded
+            assert result.feedbacks == [
+                "First feedback",
+                "Third feedback",
+            ]  # Only those with parentheses, empty excluded
             print("✓ Test 21 passed: Customer feedbacks parsing edge cases work correctly")
 
     def test_parse_notion_page_missing_optional_fields(self):
@@ -396,12 +386,9 @@ class TestNotionPageParsing:
                 "id": "page-minimal",
                 "last_edited_time": "2024-01-15T10:30:00Z",
                 "properties": {
-                    "Name": {
-                        "type": "title",
-                        "title": [{"text": {"content": "Minimal Problem"}}]
-                    }
+                    "Name": {"type": "title", "title": [{"text": {"content": "Minimal Problem"}}]}
                     # Missing all optional fields: Description, Status, Priority, Tags, etc.
-                }
+                },
             }
 
             result = client._parse_notion_page(page_data)
@@ -425,9 +412,10 @@ class TestNotionGetAllProblems:
         print("Test 11: Testing get_all_problems with empty response...")
 
         with patch.dict("sys.modules", get_mock_modules()):
-            with patch("config.settings") as mock_settings, \
-                 patch("notion.NotionClientClass") as mock_notion_class:
-
+            with (
+                patch("config.settings") as mock_settings,
+                patch("notion.NotionClientClass") as mock_notion_class,
+            ):
                 mock_settings.notion_api_key = "test-key"
                 mock_settings.notion_database_id = "test-db"
 
@@ -435,7 +423,7 @@ class TestNotionGetAllProblems:
                 mock_client_instance.databases.query.return_value = {
                     "results": [],
                     "has_more": False,
-                    "next_cursor": None
+                    "next_cursor": None,
                 }
                 mock_notion_class.return_value = mock_client_instance
 
@@ -454,9 +442,10 @@ class TestNotionGetAllProblems:
         print("Test 12: Testing get_all_problems with single page...")
 
         with patch.dict("sys.modules", get_mock_modules()):
-            with patch("config.settings") as mock_settings, \
-                 patch("notion.NotionClientClass") as mock_notion_class:
-
+            with (
+                patch("config.settings") as mock_settings,
+                patch("notion.NotionClientClass") as mock_notion_class,
+            ):
                 mock_settings.notion_api_key = "test-key"
                 mock_settings.notion_database_id = "test-db"
 
@@ -468,24 +457,24 @@ class TestNotionGetAllProblems:
                             "properties": {
                                 "Title": {
                                     "type": "title",
-                                    "title": [{"text": {"content": "Problem 1"}}]
+                                    "title": [{"text": {"content": "Problem 1"}}],
                                 }
                             },
-                            "last_edited_time": "2024-01-01T00:00:00.000Z"
+                            "last_edited_time": "2024-01-01T00:00:00.000Z",
                         },
                         {
                             "id": "page-2",
                             "properties": {
                                 "Title": {
                                     "type": "title",
-                                    "title": [{"text": {"content": "Problem 2"}}]
+                                    "title": [{"text": {"content": "Problem 2"}}],
                                 }
                             },
-                            "last_edited_time": "2024-01-01T00:00:00.000Z"
-                        }
+                            "last_edited_time": "2024-01-01T00:00:00.000Z",
+                        },
                     ],
                     "has_more": False,
-                    "next_cursor": None
+                    "next_cursor": None,
                 }
                 mock_notion_class.return_value = mock_client_instance
 
@@ -507,9 +496,10 @@ class TestNotionGetAllProblems:
         print("Test 13: Testing get_all_problems with pagination...")
 
         with patch.dict("sys.modules", get_mock_modules()):
-            with patch("config.settings") as mock_settings, \
-                 patch("notion.NotionClientClass") as mock_notion_class:
-
+            with (
+                patch("config.settings") as mock_settings,
+                patch("notion.NotionClientClass") as mock_notion_class,
+            ):
                 mock_settings.notion_api_key = "test-key"
                 mock_settings.notion_database_id = "test-db"
 
@@ -525,14 +515,14 @@ class TestNotionGetAllProblems:
                                 "properties": {
                                     "Title": {
                                         "type": "title",
-                                        "title": [{"text": {"content": "Problem 1"}}]
+                                        "title": [{"text": {"content": "Problem 1"}}],
                                     }
                                 },
-                                "last_edited_time": "2024-01-01T00:00:00.000Z"
+                                "last_edited_time": "2024-01-01T00:00:00.000Z",
                             }
                         ],
                         "has_more": True,
-                        "next_cursor": "cursor-123"
+                        "next_cursor": "cursor-123",
                     },
                     {
                         "results": [
@@ -541,15 +531,15 @@ class TestNotionGetAllProblems:
                                 "properties": {
                                     "Title": {
                                         "type": "title",
-                                        "title": [{"text": {"content": "Problem 2"}}]
+                                        "title": [{"text": {"content": "Problem 2"}}],
                                     }
                                 },
-                                "last_edited_time": "2024-01-01T00:00:00.000Z"
+                                "last_edited_time": "2024-01-01T00:00:00.000Z",
                             }
                         ],
                         "has_more": False,
-                        "next_cursor": None
-                    }
+                        "next_cursor": None,
+                    },
                 ]
                 mock_notion_class.return_value = mock_client_instance
 
@@ -572,9 +562,10 @@ class TestNotionGetAllProblems:
         print("Test 14: Testing get_all_problems error handling...")
 
         with patch.dict("sys.modules", get_mock_modules()):
-            with patch("config.settings") as mock_settings, \
-                 patch("notion.NotionClientClass") as mock_notion_class:
-
+            with (
+                patch("config.settings") as mock_settings,
+                patch("notion.NotionClientClass") as mock_notion_class,
+            ):
                 mock_settings.notion_api_key = "test-key"
                 mock_settings.notion_database_id = "test-db"
 
@@ -601,9 +592,10 @@ class TestNotionUpdateOperations:
         print("Test 15: Testing successful update_problem_with_feedback...")
 
         with patch.dict("sys.modules", get_mock_modules()):
-            with patch("config.settings") as mock_settings, \
-                 patch("notion.NotionClientClass") as mock_notion_class:
-
+            with (
+                patch("config.settings") as mock_settings,
+                patch("notion.NotionClientClass") as mock_notion_class,
+            ):
                 mock_settings.notion_api_key = "test-key"
                 mock_settings.notion_database_id = "test-db"
 
@@ -612,9 +604,9 @@ class TestNotionUpdateOperations:
                     "properties": {
                         "Description": {
                             "type": "rich_text",
-                            "rich_text": [{"text": {"content": "Existing description"}}]
+                            "rich_text": [{"text": {"content": "Existing description"}}],
                         },
-                        "Feedback Count": {"number": 2}
+                        "Feedback Count": {"number": 2},
                     }
                 }
                 mock_client_instance.pages.update.return_value = {"id": "page-123"}
@@ -633,7 +625,7 @@ class TestNotionUpdateOperations:
                     confidence=0.9,
                     transcript_id="call-123",
                     timestamp=datetime(2024, 1, 1, 12, 0, 0),
-                    context="Customer call"
+                    context="Customer call",
                 )
 
                 result = client.update_problem_with_feedback("page-123", feedback, 0.85)
@@ -649,9 +641,10 @@ class TestNotionUpdateOperations:
         print("Test 16: Testing error in update_problem_with_feedback...")
 
         with patch.dict("sys.modules", get_mock_modules()):
-            with patch("config.settings") as mock_settings, \
-                 patch("notion.NotionClientClass") as mock_notion_class:
-
+            with (
+                patch("config.settings") as mock_settings,
+                patch("notion.NotionClientClass") as mock_notion_class,
+            ):
                 mock_settings.notion_api_key = "test-key"
                 mock_settings.notion_database_id = "test-db"
 
@@ -671,7 +664,7 @@ class TestNotionUpdateOperations:
                     confidence=0.8,
                     transcript_id="call-456",
                     timestamp=datetime.now(),
-                    context="Test context"
+                    context="Test context",
                 )
 
                 result = client.update_problem_with_feedback("page-123", feedback, 0.85)
@@ -685,9 +678,10 @@ class TestNotionUpdateOperations:
         print("Test 17: Testing successful create_new_problem...")
 
         with patch.dict("sys.modules", get_mock_modules()):
-            with patch("config.settings") as mock_settings, \
-                 patch("notion.NotionClientClass") as mock_notion_class:
-
+            with (
+                patch("config.settings") as mock_settings,
+                patch("notion.NotionClientClass") as mock_notion_class,
+            ):
                 mock_settings.notion_api_key = "test-key"
                 mock_settings.notion_database_id = "test-db"
 
@@ -707,7 +701,7 @@ class TestNotionUpdateOperations:
                     confidence=0.9,
                     transcript_id="call-789",
                     timestamp=datetime(2024, 1, 1, 15, 30, 0),
-                    context="Customer interview"
+                    context="Customer interview",
                 )
 
                 result = client.create_new_problem(feedback)
@@ -722,9 +716,10 @@ class TestNotionUpdateOperations:
         print("Test 18: Testing error in create_new_problem...")
 
         with patch.dict("sys.modules", get_mock_modules()):
-            with patch("config.settings") as mock_settings, \
-                 patch("notion.NotionClientClass") as mock_notion_class:
-
+            with (
+                patch("config.settings") as mock_settings,
+                patch("notion.NotionClientClass") as mock_notion_class,
+            ):
                 mock_settings.notion_api_key = "test-key"
                 mock_settings.notion_database_id = "test-db"
 
@@ -744,7 +739,7 @@ class TestNotionUpdateOperations:
                     confidence=0.8,
                     transcript_id="call-error",
                     timestamp=datetime.now(),
-                    context="Test context"
+                    context="Test context",
                 )
 
                 result = client.create_new_problem(feedback)
@@ -785,7 +780,7 @@ class TestNotionUtilityFunctions:
                     status="New",
                     priority="High",
                     tags=["export", "feature"],
-                    feedback_count=3
+                    feedback_count=3,
                 ),
                 notion.NotionProblem(
                     id="problem-2",
@@ -794,8 +789,8 @@ class TestNotionUtilityFunctions:
                     status="In Progress",
                     priority="Medium",
                     tags=["auth", "bug"],
-                    feedback_count=1
-                )
+                    feedback_count=1,
+                ),
             ]
 
             result = notion.notion_problems_to_text(problems)
@@ -877,5 +872,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
