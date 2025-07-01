@@ -51,10 +51,11 @@ except ImportError as e:
     Pinecone = None  # type: ignore
     PINECONE_AVAILABLE = False
 
-from config import settings
-from extract import Feedback
-from llm_client import get_llm_client
-from notion import NotionProblem
+# Import after optional dependencies to avoid circular imports
+from config import settings  # noqa: E402
+from extract import Feedback  # noqa: E402
+from llm_client import get_llm_client  # noqa: E402
+from notion import NotionProblem  # noqa: E402
 
 
 logger = logging.getLogger(__name__)

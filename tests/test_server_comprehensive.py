@@ -270,7 +270,7 @@ class TestFastAPIApp:
         print("Test 8: Testing health endpoint structure...")
 
         try:
-            from fastapi import FastAPI, HTTPException
+            from fastapi import FastAPI
             from pydantic import BaseModel, Field
 
             class HealthResponse(BaseModel):
@@ -313,7 +313,7 @@ class TestFastAPIApp:
         try:
             import time
 
-            from fastapi import Depends, FastAPI, HTTPException
+            from fastapi import Depends, FastAPI
             from pydantic import BaseModel, Field
 
             class WebhookPayload(BaseModel):
@@ -500,7 +500,7 @@ class TestFastAPIApp:
 
                 except Exception as e:
                     processing_time = time.time() - start_time
-                    raise HTTPException(status_code=500, detail=str(e))
+                    raise HTTPException(status_code=500, detail=str(e)) from None
 
             # Verify the endpoint is registered
             batch_route = None
@@ -536,7 +536,7 @@ class TestFastAPIApp:
                 try:
                     raise ValueError("Test error")
                 except Exception as e:
-                    raise HTTPException(status_code=500, detail=str(e))
+                    raise HTTPException(status_code=500, detail=str(e)) from None
 
             @app.get("/test-success", response_model=TestResponse)
             async def test_success_endpoint():

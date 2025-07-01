@@ -26,7 +26,7 @@ except ImportError:
         def __init__(self, **kwargs):
             pass
 
-    def Field(**kwargs):
+    def Field(**kwargs):  # noqa: N802
         return None
 
 
@@ -321,7 +321,7 @@ if FASTAPI_AVAILABLE:
             )
         except Exception as e:
             logger.error(f"Health check failed: {e}")
-            raise HTTPException(status_code=503, detail="Service unavailable")
+            raise HTTPException(status_code=503, detail="Service unavailable") from e
 
     @app.post("/webhook/transcript", response_model=ProcessingResponse)
     async def process_transcript_webhook(
@@ -406,7 +406,7 @@ if FASTAPI_AVAILABLE:
         except Exception as e:
             processing_time = time.time() - start_time
             logger.error(f"Error processing batch: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail=str(e)) from e
 
     @app.post("/sync/notion")
     async def sync_notion_problems(pipeline: FeedbackPipeline = Depends(get_pipeline)):
@@ -422,7 +422,7 @@ if FASTAPI_AVAILABLE:
 
         except Exception as e:
             logger.error(f"Error syncing Notion problems: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail=str(e)) from e
 
     @app.post("/process/feedback", response_model=FeedbackResponse)
     async def process_feedback(
@@ -519,10 +519,10 @@ if FASTAPI_AVAILABLE:
             return {"metrics": metrics}
         except Exception as e:
             logger.error(f"Error getting metrics: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-def run_server(host: str = "0.0.0.0", port: int = 8000, reload: bool = False):
+def run_server(host: str = "0.0.0.0", port: int = 8000, reload: bool = False):  # noqa: S104
     """Run the FastAPI server."""
     if not FASTAPI_AVAILABLE:
         raise ImportError("FastAPI not available - cannot run server")

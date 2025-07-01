@@ -1,6 +1,7 @@
 """
 Comprehensive step-by-step tests for notion.py
 """
+# ruff: noqa: SIM117
 
 import os
 import sys
