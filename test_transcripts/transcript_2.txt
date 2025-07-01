@@ -1,0 +1,186 @@
+# Oplit <> S.T. Dupont : Itérations produit _ gestion des retouches
+**Date**: Thursday, June 12, 2025 at 3:29 PM  
+**Duration**: 34:15  
+**Participants**: Thomas Deschamps, Anthony, and Thibaut Wilhelm
+
+[00:13] **Thomas Deschamps**: Tu.
+
+[00:21] **Thibaut Wilhelm**: Ne l'auras jamais parlé à Dupont, on est d'accord ?
+
+[00:24] **Thomas Deschamps**: Il ne semble pas.
+
+[00:25] **Thibaut Wilhelm**: Donc on se le fait en mode de pure recherche utilisateur.
+
+[00:28] **Thomas Deschamps**: Ouais, ouais. De toute façon, la feature, elle est quand même bien spécée.
+
+[00:33] **Thibaut Wilhelm**: Ou alors tu penses que tu peux leur montrer le fonctionnement et les faits réagir ?
+
+[00:37] **Thomas Deschamps**: Je ne sais pas, on va peut-être leur montrer directement la maquette. c'est plus simple que de rentrer conceptuellement sur leur histoire.
+
+[00:44] **Thibaut Wilhelm**: C'est quoi une retouche ?
+
+[00:46] **Thomas Deschamps**: En général, quand tu leur montres une maquette, ils arrivent assez vite sur leur cas particulier et t'expliquer qu'en fait eux, c'est pas comme ça qu'ils font. Du coup, ça marche un peu différemment ou à l'inverse. Ça correspond à ce qu'ils font, mais telle ou telle chose. Il y a souvent un mais. Pfff.
+
+[01:53] **Anthony**: Qu'est-ce que... Vous êtes à la.
+
+[02:54] **Thibaut Wilhelm**: Porte et on ne vous fait pas.
+
+[02:54] **Anthony**: Rentrer, c'est ça ?
+
+[02:55] **Thibaut Wilhelm**: Voilà, merci. C'est bon, c'est bon. Oui, bonjour. Désolé, on était tous les deux partis sur des sujets différents, répondre à des mails, etc. Donc, je n'ai pas fait attention que vous étiez à la porte. Ravi d'échanger ensemble. Comment se passe la vie ? Vous n'êtes pas loin d'Annecy, c'est ça, non ? Il fait beau, vous profitez des premières chaleurs et estivales ?
+
+[03:26] **Anthony**: Il fait beau, effectivement.
+
+[03:30] **Thibaut Wilhelm**: Et moi, personnellement, je suis à Aix-en-Provence, donc il fait chaud aussi. Je suis à ma deuxième chemise de la journée. Je redescends à Paris la semaine prochaine, donc tout va bien. Ravis de pouvoir échanger ensemble. C'est Nicolas qui nous a mis en contact. Personnellement, je suis un des deux fondateurs de la société Hoplit. Thomas est en charge du produit et nous a dit qu'il fallait absolument qu'on échange avec Dupont. Ils sont trop sympas. J'aimerais vraiment beaucoup travailler avec eux, notamment sur les sujets de charge capacité.
+
+[04:14] **Thibaut Wilhelm**: Il me disait que la manufacture est vraiment impressionnante et il m'a dit aussi sur la gestion des retouches. Ils avaient beaucoup de problématiques associées à ça.
+
+[04:26] **Thibaut Wilhelm**: Peut-être que l'ordonnancement est un peu moins une de leurs priorités, mais ça peut être intéressant de leur demander leur avis et nous dans notre fonctionnement, dès qu'on fait quelque chose, on essaye de demander à nos clients mais aussi à des personnes qui ne sont pas clientes pour voir à quel point on apporte de la valeur, avoir des bons retours et avoir aussi des retours de personnes qui ne sont pas dans le prisme OPLIT pour voir à quel point c'est pertinent. Donc merci d'être proie pour cet appel, je ne m'attendais pas autant mais c'est top.
+
+[04:55] **Thibaut Wilhelm**: Pour nous l'objectif c'est de vous montrer un peu les maquettes sur cette question de gestion de retouches et voir si ça se prête à votre fonctionnement ou pas.
+
+[05:05] **Anthony**: Oui, on est trois. C'est plus moi qui suis en contact avec Nicolas, même si Yoann l'a vu un petit peu. Je me suis permis de les faire venir parce que du coup, on a Yoann Chaud qui est responsable de production et puis on a Gégé qui est en fait notre chef projet, notre coordinateur de projet de production et d'amélioration continue dont Oplit pourrait faire partie. et qui est aussi le point central entre l'ensemble des ateliers.
+
+[05:38] **Anthony**: Et du coup, l'objectif, c'est qu'il travaille aussi sur ce sujet d'amélioration, notamment des retouches, et qu'en fait, plutôt en direct, il puisse vous expliquer notre besoin, comment on fonctionne aujourd'hui et comment on souhaite évoluer, sachant qu'aujourd'hui, on fonctionne avec une organisation qu'on a établie entre 2017 et 2019. Dans un contexte où Dupont, on avait un contexte qui était un peu différent. On était plutôt dans une phase plus descendante, on va dire, qu'on a complètement inversée en 2020. Là, aujourd'hui, par rapport à ce moment-là, on fait plus que du double de la production en 2017-2018.
+
+[06:20] **Anthony**: Donc, on est aussi dans un autre contexte et c'est pour ça aussi qu'on souhaite nous faire évoluer l'organisation des reprises et des retouches. On va vous partager un peu nous comment on voit les problématiques auxquelles on fait face et qu'est-ce qu'on attend d'un outil comme OPLIT pour répondre à ce besoin.
+
+[06:41] **Thibaut Wilhelm**: Super, très bien. Et Johan, vous avez dit GG ?
+
+[06:47] **Anthony**: Oui GG, mon prénom c'est Jaël, donc GG ça va très bien, Zrelic.
+
+[06:55] **Thibaut Wilhelm**: Ok, ça marche. Et vous avez déjà eu des présentations d'OPLIT et de comment ça fonctionne ?
+
+[07:00] **Anthony**: J'ai le slide qui est bien complet.
+
+[07:09] **Thibaut Wilhelm**: C'est pas peut-être l'objectif du meeting mais en tout cas si vous voulez on peut replanifier un échange où moi je vous fais ou Nicolas vous fait une démo plus approfondie de comment ça fonctionne. Alors là c'est pas directement l'objectif du meeting et si je me lance dans une démo Thomas va me tuer mais on peut peut-être planifier ça. Est-ce que vous avez un agenda devant les yeux comme ça je fais ça tout de suite ? Par exemple, non vous avez pas ?
+
+[07:35] **Anthony**: Si ça vous va, on vous renvoie une proposition. Après, on a eu pas mal d'infos aussi, donc on peut le proposer encore une fois. Aujourd'hui sur Oplit, on pense que ça va plutôt être sur l'automne. D'ici là, avant, ça va être compliqué. On partagera aussi avec Gégé et puis au besoin, on vous contacte, soit vous, soit Nicolas, si on a besoin de rappels et de présentations.
+
+[08:03] **Thibaut Wilhelm**: Ok, super. Merci pour l'introduction. Thomas, je te laisse la main ? Peut-être ?
+
+[08:11] **Thomas Deschamps**: Ouais, soit je vous présente ce qu'on fait nous actuellement, soit je vous laisse vous commencer sur votre process, ce qui marche, ce qui ne marche pas, vos frustrations, vos frictions.
+
+[08:22] **Anthony**: Comme vous voulez. Ouais, comme vous voulez, vous pouvez présenter. Présentez votre identité, on va voir par rapport à nos problèmes.
+
+[08:29] **Thomas Deschamps**: Ok. Récemment, on a retravaillé sur ces questions de retouches. Nous, on s'est rendu compte qu'il y avait un problème plus large, c'est qu'en général, on commence un OEF, tout va bien, on fait une opération, deux opérations, puis les choses avancent, il y a des synchronisations, il y a des retouches, il y a du rebut. En fait, ce qu'on appelle le cycle de vie de l'OEF, Et l'idée, c'est de représenter, de représenter dans le PLEAT le cycle de vide web de la façon la plus claire et réaliste qu'il soit.
+
+[09:08] **Thomas Deschamps**: Donc pour ça, on a travaillé vraiment sur l'affichage de quantité et sur le monitoring des quantités, étape après étape. Et on est arrivé sur cette vue, sur cette vue là, qui permet de suivre à n'importe quel instant, quelles sont les opérations qui sont en cours, quelles sont les opérations où il y a eu des quais terminés, des rebuffs, des rebuts qui ont été générés à cette étape et des pièces qui sont encore en cours. Donc ça, c'est ce sur quoi on est arrivé.
+
+[09:39] **Thomas Deschamps**: Donc ça, ça marche avec un badgage qui est intégré à Oplit ou avec un badgage qui est externe et qui remonte via un port ou via des payloads en temps réel. Et sur la notion des retouches, on est dans l'application sur des retouches en gamme. La retouche en gamme, c'est le cas où une pièce reste à son poste en retouche ou revient sur une opération précédente en retouche et reprend la gamme normale, qui est un cas de retouche.
+
+[10:11] **Thomas Deschamps**: Dans ces cas-là, ce qu'on a fait, c'est gérer l'envoi d'un nombre de pièces vers une opération précédente, ce qu'on voit ici. Et dans le cas où on fait ça par un port de données, nous on va en fait gérer les ouvertures et les fermetures d'opérations par rapport aux données qu'envoie le RP. Spécifiquement, si on voit qu'une opération qui a été mise à terminer redevient active, nous on va le prendre en compte dans l'oubli et la réafficher en tant qu'active et du coup l'afficher dans l'écran d'ordonnancement pour les ordonnanceurs et pour les opérateurs.
+
+[10:47] **Thomas Deschamps**: Et il y a une dernière spécificité, c'est les retouches qui sont hors gamme. Les retouches hors gamme chez toutes les personnes qu'on a interlevées, elles étaient gérées au niveau de l'ERP, ça a recréé un nouvel OF. Et donc celles-là, elles sont gérées comme ça, d'ampli, comme étant un nouvel OF, avec une gamme particulière. Donc soit un client, ils ont une gamme, par type de retouches, par type de produits. Il y en a qui ont une gamme générique pour les retouches. Donc chacun sa tambouille pour ça.
+
+[11:24] **Thomas Deschamps**: C'était vraiment cette idée de rendre le plus simple possible la visualisation d'un ordre de fabrication dans son cycle de vie. et que n'importe quelle personne dans l'atelier ou dans les bureaux puisse comprendre que tel OEF, il a telle étape, il s'est passé quoi dessus, et avoir très très rapidement une bonne information et une bonne compréhension de ce qui se passe. Et voilà, voilà notre travail sur tout ce qui est retouches et rebuts actuellement.
+
+[12:00] **Anthony**: Et en termes de si c'est en retouches, vous arrivez par exemple Vous arrivez à identifier l'opération, c'est ça ?
+
+[12:09] **Thomas Deschamps**: Typiquement, là dans le cas où on le fait dans Omplete, on va partir d'une opération n, on va choisir une quantité à envoyer et on va l'envoyer vers une opération x ou y, donc en précédente. et on va changer la quantité. La quantité en cours va être incrémentée du nombre de pièces qu'on rajoute en retouche sur l'opération destination et l'opération source va se faire décrémenter de N pièces. En fait, aujourd'hui, chez nos clients, il n'y a pas de notion de lot qui est forte.
+
+[12:54] **Thomas Deschamps**: Les pièces sont remplaçables, donc à la fin de votre opération, vous prenez deux pièces dans votre bac, elles sont interchangeables. Donc on n'a pas travaillé vraiment sur ce dire, OK, on crée des lots particuliers avec un tracking particulier. Et de toute façon, comme c'est quelque chose qu'on trouve rarement dans l'ERP et rarement chez nos clients, ça aurait été pour nous une feature un peu trop alambiquée et pas utilisée. Voilà ce qu'on a sur les retouches. Est-ce que ça correspond à vous, votre façon de gérer vos retouches ?
+
+[13:29] **Thomas Deschamps**: Vous faites de la retouche qui est en gamme, qui est hors gamme ?
+
+[13:36] **Anthony**: Nous. On fait de la retouche, alors nous déjà on a des motifs, je ne sais pas si ça c'est le genre de choses que vous avez, On identifie le motif de la retouche, la problématique de la rouverie. Ensuite, sur une partie, je pense que ça ressemble, mais je crois qu'on a été assez loin. On gère des paniers, on a une traçabilité physique, c'est-à-dire qu'on gère un lien entre notre opération et une boîte. physiquement, avec un code barre, on sait dans quelle boîte est notre quantité de retouches.
+
+[14:25] **Anthony**: Dans le fond, c'est à peu près la même chose, ça reste sur l'OF, donc c'est un peu comme vous. On l'identifie que c'est sur une reprise, donc une opération particulière. Et ça peut aussi changer d'atelier. En gros, c'est une manière synthétique et. Si tu veux compléter, Deux heures de fabrication, on a des œuvres d'à peu près 25 voire 50 briquets, on va dire pour tout de la même chose en stylo.
+
+[14:55] **Anthony**: Et toute la problématique, c'est que là-dedans, on va voir à différentes étapes, on a un process qui est très très long, qui peut durer jusqu'à trois mois et demi, deux mois à trois mois et demi selon le type de composants de briquets, de produits finis. Et donc là-dedans, on passe vraiment par énormément d'ateliers, la mécanique pour l'usinage, le lacage, le polissage, la galvanoplastie, l'assemblage, le conditionnement. A chacune de ces étapes, il y a un risque d'écarter des composants.
+
+[15:32] **Anthony**: Aujourd'hui, entre les pièces qui sont écartées à un moment, qui partent en reprise ou qui sont rebutées, c'est de l'ordre de 5% du volume qu'on fait. Donc il y a un enjeu qui est assez crucial de ce côté-là. Après, on peut avoir des très petites quantités, un briquet, deux briquets, qui sont écartés à telle étape, telle étape. Et en fait, on a une traçabilité par rapport à l'OF.
+
+[16:02] **Anthony**: A chacune des opérations, on va, je répète ce que dit Anthony, on va mettre le briquet ou le composant dans une boîte qui sera référencée et on va lui attribuer un numéro de reprise. Ce numéro de reprise, il a un intérêt, c'est qu'il donne l'emplacement dans lequel le défaut a été généré et l'emplacement dans lequel il doit être travaillé. Et à chaque fois qu'il est travaillé dans un atelier, il va rebondir et il va devenir une autre reprise.
+
+[16:42] **Thomas Deschamps**: On va prendre votre OEF, c'est un Dupont en 234, on a 50 brequets, sur les 50 brequets, il y en a un qui a un souci, il part en reprise, ça devient Dupont en 234-R1 par exemple, il repart sur un atelier et quand il va passer de cet atelier à un autre atelier, là il devient Dupont en 234-R2.
+
+[17:09] **Anthony**: Et il va devenir R3 l'opération suivante, R4, jusqu'à arriver dans l'atelier où le défaut a été détecté. Et là en fait il retourne dans les pièces bobs. Donc quand il va être déclaré, il va retourner dans des pièces bobs.
+
+[17:23] **Thomas Deschamps**: Ok, donc il y a vraiment une traçabilité très très forte sur la reprise et ça c'est quelque chose que vous arrivez à remonter dans l'ORP ou c'est quelque chose qui garde ? que vous suivez sur le côté avec d'autres systèmes de suivi ?
+
+[17:40] **Anthony**: Avec EMS.
+
+[17:42] **Thomas Deschamps**: C'est tout géré par l'EMS. Et par contre dans l'ERP ?
+
+[17:50] **Anthony**: De reprise, plus on est sur une. Transmissibilité de pièces BOD, de rebuter pièces BOD sur les reprises, enfin moi j'ai. ADQ et reprise, mais on a une vision plus à l'opération d'une manière générale. C'est beaucoup plus détaillé dans le MES.
+
+[18:08] **Thomas Deschamps**: Le MES est 100% fidèle à ce qu'il y a dans l'atelier, là où le ERP lui l'agrège, il est plus gros, un peu plus grosse maille on va dire.
+
+[18:19] **Anthony**: Il y a moins de détails. Il est sur la même maille, donc on suit la même gamme. Il n'y a pas de gamme macro et de gamme micro dans l'EMS, on suit la même gamme. Mais par contre, on ne va pas avoir toutes les informations dans l'ERP. On va avoir plus d'informations dans l'EMS, dans le type de reprise, dans la gestion des reprises, dans les commentaires, des choses comme ça.
+
+[18:42] **Thibaut Wilhelm**: L'EMS, c'est Simag, c'est ça ?
+
+[18:44] **Anthony**: C'est Simag, oui, tout à fait. On peut avoir parfois des pertes de données. C'est arrivé en faisant l'analyse de bilan. Je me suis aperçu qu'il y avait des reprises qui duraient depuis largement plus de 100 jours, voire 500 jours. Et en fait, c'est des données qui sont perdues en route. À un moment, il y a eu des problèmes de liaison. Et donc, on se retrouve avec des vieilles reprises qui traînent et qui viennent fausser un peu le bilan.
+
+[19:13] **Anthony**: Parce qu'aujourd'hui, on a développé en interne, on va dire sous Excel, à partir de la base de données, des tableaux, des indicateurs. Donc des indicateurs avec des quantités de reprises, en reprise, ou alors des durées de reprise. En fait, on s'aperçoit qu'on a des durées de reprise qui sont extrêmement élevées, mais justement parce qu'elles sont faussées par ces vieilles reprises qui traînent depuis très longtemps. Avoir un indicateur comme le vôtre permettrait aussi de mettre le focus sur ces reprises pour pouvoir les traiter et les isoler.
+
+[19:58] **Thomas Deschamps**: La traçabilité que vous faites en créant un sous-lot au niveau de l'OF, C'est par rapport à un process qualité ou c'est par rapport à la valeur du briquet qui est quand même substantielle ou c'est des politiques de coûts qui nous amènent à avoir une traçabilité aussi précise au niveau de la retouche ?
+
+[20:24] **Anthony**: Oui, c'est en termes de... alors pas que de valeur, on le fait pour tous nos produits, on parle des briquets de stylo mais on ne fait pas de pièces, on a des OS pour des verrous lissières, des pochons de stylo. On fait le moindre composant. C'est pour éviter de perdre du temps et de savoir où c'est. Et après, oui, en termes de bilan qualité, d'avoir le plus de détails possibles pour derrière faire des analyses, des analyses de problèmes et des plans d'action pour résoudre ça. Parce qu'en fait, aujourd'hui, on a plein de causes différentes.
+
+[20:55] **Anthony**: On a des processus qui sont assez complexes. On est intégré de plein de processus différents et de processus notamment industriels. Donc là, l'objectif, c'est aussi de récolter un maximum de données pour faire de l'analyse. Aujourd'hui, l'enjeu, c'est quand même de trouver le bon équilibre. C'est bien d'avoir plein de données pour bien les traiter et bien analyser. Donc, je pense que l'équilibre, il est là aussi dans la réflexion. C'est aussi de trouver ce bon niveau.
+
+[21:31] **Thomas Deschamps**: Ok. Et votre analyse de données, vous la faites à partir du MES, de l'ERP, les deux ?
+
+[21:40] **Anthony**: MES aujourd'hui. Aujourd'hui c'est MES.
+
+[21:45] **Thomas Deschamps**: Et vous faites ça dans Excel ou vous avez des outils un peu plus...
+
+[21:53] **Anthony**: Ouais, il y a pas mal d'extracts et de gestion après d'analyse par Excel. L'urgence avait été développée lorsqu'on a mis en place le MES et ça a été plus ou moins délaissé assez rapidement. Car trop lourd, on a des délais de mise à jour, c'est des documents qui sont très lourds à gérer et qui ne sont pas pratiques à utiliser au quotidien. Du coup, ça a été écarté. La qualité fait un bilan à la semaine, mais le travail que j'ai fait moi, personne ne le voit.
+
+[22:50] **Thibaut Wilhelm**: Je suis désolé, je dois vous abandonner parce que j'ai un point important à 16h, mais au plaisir d'échanger sur la démo d'Optimus. Merci beaucoup et passez une bonne journée.
+
+[23:07] **Anthony**: Si vous avez des questions, après l'objectif, je pense que ça serait de faire un peu le parallèle de manière synthétique si possible, entre ce qu'on voudrait changer entre aujourd'hui et vers quoi on veut tendre. Je pense que c'est un peu ça aussi la solution, c'est si GG a travaillé sur un peu vers quoi on veut tendre. Moi j'ai fait un petit mémo, enfin un joli mémo par type de reprise et qui explique un peu la problématique qu'on peut avoir dans le site.
+
+[23:39] **Anthony**: Donc je pense qu'après l'avoir balayé, vous aurez une meilleure idée de ce qu'on a et puis dans la synthèse à la fin j'ai fait une petite analyse des besoins qu'on aurait. Donc en gros, ce qu'on a dit, c'est savoir pouvoir accéder que le gestionnaire, aujourd'hui on va dire que c'est le responsable du service puisse accéder facilement à un indicateur permettant de visualiser et analyser rapidement les reprises, les volumes, les durées, Et comme je disais, le tableau qui existe aujourd'hui est trop lourd et il n'est pas facilement exploitable.
+
+[24:17] **Anthony**: Je pense que vous avez répondu déjà tout à l'heure en montrant l'exemple à ce besoin-là. L'idée c'est aussi de pouvoir, comme je disais tout à l'heure, éliminer les choses qui ont été perdues et égarées, pouvoir les éliminer assez rapidement. Mais bon, on se fait partie de l'analyse bien sûr, l'exploitation de l'analyse. Qu'est-ce que le système ? Est-ce qu'au bout d'un moment, ça permet d'avoir des alertes ? Par exemple, on parle d'une notion de durée. Si on dit que la durée, à un moment, ça dépasse un certain temps ?
+
+[24:50] **Thomas Deschamps**: Actuellement, non. Après, c'est dans les tuyaux, en fait. Dans le système d'alerting. Aujourd'hui, on va avoir des indicateurs visuels dans l'application sur plusieurs choses, mais avoir un alerting proactif qui soit, typiquement, se dire qu'au bout de 30 jours, on se sent un email parce que l'OF est coincé ou un récap, ce genre de choses, ça, on ne l'a pas encore fait. Pour réfléchir aussi à des notions de vues particulières, ça pourrait être tous les OEF qui sont commencés depuis plus de 180 jours et qui ne sont pas terminés.
+
+[25:27] **Thomas Deschamps**: En fait, ça peut faire monter une liste avec tout ça. Là, il y a des filtres, mais après l'idée, c'est d'industrialiser un peu ces filtres. quelqu'un qui fait de la qualité et puisse avoir des vues particulières à ce qu'il fait, quelqu'un qui travaille sur une partie des opérations et puisse voir les choses par rapport à ses opérations à lui. Le fait que chacun puisse voir la donnée comme ça lui importe et que chacun puisse avoir sa façon de travailler, c'est tout ça les idées.
+
+[25:57] **Thomas Deschamps**: Et l'alerting c'est aussi quelque chose auquel on réfléchit, ça n'a pas encore été implémenté mais ça le saura un jour ou l'autre.
+
+[26:04] **Anthony**: Qu'est-ce qui serait possible pour le reste de l'atelier ? De pouvoir extraire des données, c'est-à-dire qu'on a des familles de produits, on a des familles de produits finis, on a des familles de composants, et on retrouve certaines problématiques transverses sur ces produits-là, et l'idée c'est de pouvoir extraire des données pour essayer de comprendre les types de reprises qu'on a, à quoi elles peuvent être dues, faire des bilans avec les opérateurs, c'est-à-dire faire un travail sur la performance de chaque opérateur.
+
+[26:45] **Thomas Deschamps**: Aujourd'hui, on peut paraître d'exporter la donnée, mais ce n'est pas forcément la fonctionnalité sur laquelle on a le plus travaillé, vu que c'est un peu brut de décoffrage, on exporte un peu tout.
+
+[27:01] **Thomas Deschamps**: Nous on a aussi une volonté à intégrer pas mal d'IKEA et tout ça, donc après c'est une réflexion sur est-ce que c'est des données que nous on intègre dans la plateforme sous forme de report ou d'analytics ou est-ce que effectivement c'est des données qui seront plus tellement spécifiques à ce que vous faites ou à ce que fait un utilisateur que l'export est la meilleure solution, ça c'est vraiment à voir au cas par cas. Mais oui après toutes les données qui est d'empli est exportable par défaut.
+
+[27:32] **Thomas Deschamps**: Ce qu'il faut comprendre dans Oplit, je pense qu'il y a un peu de différends au niveau de la donnée. Si vous voulez pas mal à donner, c'est tout ce qu'il faut comprendre, c'est votre ERP, votre MES, c'est une donnée qui est, entre guillemets, j'ai envie de dire, additive. C'est-à-dire qu'en fait, vous prenez une donnée et tous les jours, vous allez rajouter des données dedans et les données s'écrasent. Oplit, en fait, on fonctionne aujourd'hui sous forme d'import. C'est-à-dire, on prend un gros fichier, et les imports s'écrasent l'un les autres.
+
+[28:05] **Thomas Deschamps**: Au niveau de la charge et au niveau des soucis de production, ça met à jour. Donc en fait, il faut comprendre que la donnée qu'on regarde dans le blitz ne correspond pas forcément exactement à la donnée que vous avez dans l'ERP ou le MES à un instant T. Donc il faut faire attention quand on fait de l'export et de l'analyse sur les données.
+
+[28:30] **Anthony**: Ça décale d'une journée en fait.
+
+[28:33] **Thomas Deschamps**: Ça décale d'une journée et en fait, dans le cas où, en fonction de ce que vous allez configurer au PLEAT, il y a différents modes de simulation qui sont soit des simulations flottantes, c'est-à-dire qu'on reprend toujours le nouveau fichier d'import de charge ou des simulations qui vont être bloquées. Vous prenez votre import de charge, je ne sais pas, le 1er juin et on rajoute que les sources de production. Quand on est en simulation flottante, l'ensemble des OEFs que vous affichiez changent.
+
+[29:05] **Thomas Deschamps**: Typiquement, si vous n'envoyez plus les OEFs terminés, tous les OEFs terminés entre le 1er juin et le 12, vont disparaître de la donnée qu'on a d'ampli sur le scope de la simulation. Et en fait c'est là où justement c'est en fonction de vous ce que vous voulez faire, il faudra qu'on travaille avec vous sur comment bien set-uper vos simulations et votre espèce de travail pour que vous ayez bien ce à quoi vous vous attendez quand vous travaillez. Et c'est du set-up quoi.
+
+[29:41] **Thomas Deschamps**: Parce qu'en fait on n'est pas branché directement sur l'ORP, donc on n'est pas vraiment, on n'est pas juste une projection de l'ORP. Après, on évolue tous les jours avec les besoins des clients. L'idée, c'est qu'on est plus agile que d'autres grosses entreprises, des grosses ERP. L'idée, c'est que nous, on sort des fonctionnalités de manière assez rapide et qu'avec le temps, le produit évolue. plus qu'un ERP classique où si vous voulez faire évoluer, il faut aller intervenir dessus, faire travailler des développeurs, des consultants et tout ça. Nous, de toute façon, je pense que.
+
+[30:41] **Anthony**: De notre côté, on va affiner un petit peu tout ça, voir ce qu'aujourd'hui on est capable de faire. Je pense qu'aujourd'hui, on est quand même capable de faire pas mal de choses. Je pense que ce qu'il faut, c'est ce que disait aussi Gégé, c'est un moment, quelle manière on peut l'analyser, comment on va l'analyser et trouver le bon équilibre.
+
+[30:58] **Thomas Deschamps**: Après, c'est vous qui voyez où est la valeur d'Oclipse par rapport à ce que vous avez, où est-ce que vous avez de la friction. Explicement, je pense dans ce que vous faites, où il y a du Excel, je pense qu'il est compliqué, c'est la collaboration et la maintenance de ces projets. C'est toujours ça qui est compliqué en fait dans les tableaux Excel. En général, le tableau Excel il marche bien. C'est après, est-ce que quelqu'un est malade ? Quelqu'un s'en va ? Quelqu'un veut l'utiliser dans le tableau Excel mais un peu différemment.
+
+[31:27] **Thomas Deschamps**: Enfin, ce n'est pas forcément quelque chose qui passe bien à l'échelle et qui est facilement mettable dans toutes les mains. Donc, c'est en ça que les outils, je trouve, moi, ont une valeur ajoutée. Mais après, c'est vous qui faites la vie. dans ce que ça vous apporte, ce que ça vous apporterait, des choses que vous n'avez pas pensées qui seront dans le produit et qui vous amélioreront la vie, des choses que nous devons peut-être rajouter pour que ça marche bien pour vous.
+
+[31:55] **Thomas Deschamps**: Typiquement votre process de retouche actuellement, il faudrait qu'on adapte le nôtre pour prendre en compte ce que vous faites, pour garder cette traçabilité et ce genre de choses.
+
+[32:11] **Anthony**: Pour nous, on doit avoir une réflexion aussi. Quel outil, comment OPLiT peut intervenir là-dedans ? Est-ce que c'est OPLiT ? Est-ce que c'est une BI ? Il faut aussi qu'on ait une réflexion interne. En tout cas, voilà un peu le mode de fonctionnement.
+
+[32:29] **Thomas Deschamps**: Là, on n'a pas parlé aussi, mais on a une petite partie qui est sur le PDP, qui est sur la simulation ChargeKappa. qui est aussi un autre module qui est différent. Et au niveau de l'ordonnancement, on n'a pas les retouches, mais aussi tout le travail de l'atelier, une visibilité entre guillemets simple pour les ateliers, les opérateurs, pour collaborer si vous ordonnancez souvent à la main, si vous avez besoin de différentes vues, si vous êtes vendeur.
+
+[33:01] **Thomas Deschamps**: différents types de priorisation avec un atelier qui est ghoulaise auquel vous allez vraiment avancer par rapport à une priorité, par rapport à un retard, les autres c'est plus difficile. On a cette partie là aussi qu'on n'a pas abordé mais ça je pense que Thibault vous montrera.
+
+[33:14] **Anthony**: Ça on l'avait vu la dernière fois avec Nicolas.
+
+[33:18] **Thomas Deschamps**: Ok, écoutez je pense que je vous laisse réfléchir à tout ça. On est ouvert à toutes les suggestions. On est assez transparent sur ce qu'on fait, ce qu'on ne fait pas et.
+
+[33:41] **Anthony**: Quand on le fait. Vous avez un kit de présentation de ce que vous nous avez montré tout à l'heure en démo ?
+
+[33:51] **Thomas Deschamps**: Je suis en train de le faire sur les rebuts et les retouches, comme la fonctionnalité n'est pas complètement finie, sauf qu'aujourd'hui on n'a pas la partie importe qui est finie. Je n'ai pas fini la plaquette, mais elle sera disponible incessamment, sous moyennement peu. Merci beaucoup.
+
+[34:14] **Anthony**: Merci à vous.

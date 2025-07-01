@@ -2,28 +2,50 @@
 Embedding generation and vector store operations.
 """
 
+import datetime
 import logging
 import uuid
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
 from unittest.mock import Mock
 
 
+def _should_suppress_import_warnings() -> bool:
+    """Check if import warnings should be suppressed."""
+    import os
+    # Suppress during tests
+    if os.environ.get('PYTEST_CURRENT_TEST'):
+        return True
+    # Check config setting (with safe import to avoid circular dependency)
+    try:
+        from config import settings
+        return settings.suppress_import_warnings
+    except (ImportError, AttributeError):
+        return False
+
+
 try:
     import chromadb
     from chromadb.config import Settings as ChromaSettings
+    CHROMADB_AVAILABLE = True
 except ImportError as e:
-    logging.warning(f"ChromaDB not available: {e}")
+    if not _should_suppress_import_warnings():
+        logging.warning(f"ChromaDB not available: {e}")
     chromadb = None  # type: ignore
     ChromaSettings = None  # type: ignore
+    CHROMADB_AVAILABLE = False
 
 try:
     import pinecone
     from pinecone import Pinecone
+    PINECONE_AVAILABLE = True
 except ImportError as e:
-    logging.warning(f"Pinecone not available: {e}")
+    if not _should_suppress_import_warnings():
+        logging.warning(f"Pinecone not available: {e}")
     pinecone = None  # type: ignore
     Pinecone = None  # type: ignore
+    PINECONE_AVAILABLE = False
 
 from config import settings
 from extract import Feedback
@@ -45,17 +67,20 @@ class EmbeddingDocument:
     doc_type: str  # "feedback" or "problem"
 
 
-class VectorStore:
+class VectorStore(ABC):
     """Abstract vector store interface."""
 
+    @abstractmethod
     async def add_documents(self, documents: list[EmbeddingDocument]) -> bool:
         """Add documents to vector store."""
         raise NotImplementedError
 
+    @abstractmethod
     async def search(self, query_embedding: list[float], limit: int = 5) -> list[dict[str, Any]]:
         """Search for similar documents."""
         raise NotImplementedError
 
+    @abstractmethod
     async def delete_documents(self, doc_ids: list[str]) -> bool:
         """Delete documents from vector store."""
         raise NotImplementedError
@@ -347,6 +372,8 @@ class EmbeddingManager:
         for problem in problems:
             # Combine title and description
             text = f"{problem.title}\n\n{problem.description}"
+            if problem.feedbacks:
+                text += "\n\nCustomer Feedbacks:\n" + "\n".join(problem.feedbacks)
             texts.append(text)
 
             metadata = {
@@ -410,6 +437,15 @@ class EmbeddingManager:
 
             # Generate new embeddings
             documents = await self.embed_problems(problems)
+
+            # Add additional metadata if needed
+            for doc in documents:
+                doc.metadata.update(
+                    {
+                        "refreshed_at": datetime.datetime.now().isoformat(),
+                        "source": "notion_refresh",
+                    }
+                )
 
             # Store new embeddings
             return await self.store_embeddings(documents)

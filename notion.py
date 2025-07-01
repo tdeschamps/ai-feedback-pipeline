@@ -29,6 +29,7 @@ class NotionProblem:
     title: str
     description: str
     status: str
+    feedbacks: list[str] | None = None
     priority: str | None = None
     tags: list[str] | None = None
     feedback_count: int = 0
@@ -92,7 +93,6 @@ class NotionClient:
         """Parse Notion page into NotionProblem object."""
         try:
             properties = page.get("properties", {})
-
             # Extract title (assuming it's in a "Title" or "Name" property)
             title = ""
             for _prop_name, prop_data in properties.items():
@@ -101,7 +101,14 @@ class NotionClient:
                     if title_array:
                         title = title_array[0].get("text", {}).get("content", "")
                     break
-
+            feedbacks = []
+            customer_feedbacks = properties.get("🚀 Customer Feedbacks 1", {})
+            for feedback in customer_feedbacks.get("rich_text", []):
+                feedback_text = feedback.get("text", {}).get("content", "")
+                if feedback_text and "(" in feedback_text:
+                    # Extract text before the first parenthesis
+                    feedback_text = feedback_text.split("(")[0].strip()
+                    feedbacks.append(feedback_text) if feedback_text else None
             # Extract description from rich text property
             description = ""
             if "Description" in properties:
@@ -147,6 +154,7 @@ class NotionClient:
             return NotionProblem(
                 id=page["id"],
                 title=title,
+                feedbacks=feedbacks,
                 description=description,
                 status=status,
                 priority=priority,

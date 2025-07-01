@@ -177,7 +177,7 @@ ANTHROPIC_API_KEY=your_key
 #### Ollama (Local)
 ```bash
 LLM_PROVIDER=ollama
-LLM_MODEL=llama2
+LLM_MODEL=mistral
 LLM_BASE_URL=http://localhost:11434
 ```
 

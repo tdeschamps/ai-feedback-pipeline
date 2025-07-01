@@ -41,6 +41,18 @@ class Feedback:
         if not self.verbatim.strip():
             raise ValueError("Verbatim cannot be empty")
 
+    def to_dict(self) -> dict[str, Any]:
+        """Convert feedback to dictionary format."""
+        return {
+            "type": self.type,
+            "summary": self.summary,
+            "verbatim": self.verbatim,
+            "confidence": self.confidence,
+            "transcript_id": self.transcript_id,
+            "timestamp": self.timestamp.isoformat(),
+            "context": self.context,
+        }
+
 
 class FeedbackExtractor:
     """Extract and classify feedback from transcripts using LLM."""
@@ -55,27 +67,34 @@ class FeedbackExtractor:
 
     def _build_extraction_prompt(self) -> str:
         """Build the system prompt for feedback extraction."""
-        return """You are an expert at analyzing customer conversations and extracting actionable feedback.
+        return """Vous êtes un expert en analyse de conversations clients et en extraction de commentaires exploitables.
 
-Your task is to identify and extract two types of feedback from customer transcripts:
-1. FEATURE REQUESTS: Explicit or implicit requests for new features, improvements, or capabilities
-2. CUSTOMER PAINS: Problems, frustrations, complaints, or difficulties mentioned by customers
+    Votre tâche est d'identifier et d'extraire deux types de commentaires à partir de transcriptions client :
+    1. DEMANDES DE FONCTIONNALITÉS : Demandes explicites ou implicites de nouvelles fonctionnalités, améliorations ou capacités
+    2. PROBLÈMES CLIENTS : Problèmes, frustrations, plaintes ou difficultés mentionnés par les clients
 
-For each piece of feedback found, extract:
-- type: "feature_request" or "customer_pain"
-- summary: A concise 1-2 sentence description of the feedback
-- verbatim: The exact quote from the transcript (preserve original wording)
-- confidence: Your confidence level (0.0-1.0) that this is valid feedback
+    Pour chaque commentaire trouvé, extrayez :
+    - type: "feature_request" ou "customer_pain"
+    - summary: Une description concise en 1-2 phrases du commentaire
+    - verbatim: La citation exacte de la transcription (conservez la formulation originale)
+    - confidence: Votre niveau de confiance (0.0-1.0) que ceci est un commentaire valide
 
-IMPORTANT GUIDELINES:
-- Only extract genuine feedback that could inform product decisions
-- Ignore small talk, pleasantries, or irrelevant conversation
-- For feature requests, look for phrases like "I wish", "It would be great if", "Can you add", etc.
-- For customer pains, look for complaints, frustrations, or difficulties
-- Be selective - quality over quantity
-- Preserve exact quotes in the verbatim field
-
-Return your response as a valid JSON array of feedback objects. If no feedback is found, return an empty array."""
+    ### **Exemple de réponse attendue (format JSON)**
+    [
+    {
+        "type": "feature_request",
+        "summary": "Le client demande une intégration directe avec l'ERP pour éviter les retards de données.",
+        "verbatim": "Il faudrait intégrer directement l'ERP pour éviter ces retards de données, car l'import en masse est trop lent.",
+        "confidence": 0.95
+    },
+    {
+        "type": "customer_pain",
+        "summary": "Le client exprime des difficultés avec la scalabilité des outils Excel.",
+        "verbatim": "Excel ne gère pas bien les processus complexes, surtout avec des équipes grandes.",
+        "confidence": 0.9
+    }
+    ]
+    """
 
     async def extract_feedback(self, transcript: str, transcript_id: str) -> list[Feedback]:
         """Extract structured feedback from a transcript."""
@@ -84,31 +103,40 @@ Return your response as a valid JSON array of feedback objects. If no feedback i
                 {"role": "system", "content": self.extraction_prompt},
                 {
                     "role": "user",
-                    "content": f"Analyze this customer transcript and extract feedback:\n\n{transcript}",
+                    "content": f"Analysez cette transcription client et extrayez les commentaires :\n\n{transcript}",
                 },
             ]
 
             response = await self.llm_client.generate(messages)
+            logger.info(f"LLM response received for transcript {transcript_id}: {response}...")
+            logger.info(
+                f"LLM response received for transcript {transcript_id}: {response.content}..."
+            )
             feedback_data = self._parse_feedback_response(response.content)
 
             # Convert to Feedback objects
             feedbacks = []
             for item in feedback_data:
-                feedback = Feedback(
-                    type=item.get("type", "").lower(),
-                    summary=item.get("summary", ""),
-                    verbatim=item.get("verbatim", ""),
-                    confidence=item.get("confidence", 0.0),
-                    transcript_id=transcript_id,
-                    timestamp=datetime.now(),
-                    context=item.get("context"),
-                )
+                try:
+                    feedback = Feedback(
+                        type=item.get("type", "").lower(),
+                        summary=item.get("summary", ""),
+                        verbatim=item.get("verbatim", ""),
+                        confidence=item.get("confidence", 0.0),
+                        transcript_id=transcript_id,
+                        timestamp=datetime.now(),
+                        context=item.get("context"),
+                    )
 
-                # Validate feedback
-                if self._is_valid_feedback(feedback):
-                    feedbacks.append(feedback)
-                else:
-                    logger.warning(f"Invalid feedback extracted: {feedback}")
+                    # Validate feedback
+                    if self._is_valid_feedback(feedback):
+                        feedbacks.append(feedback)
+                    else:
+                        logger.warning(f"Invalid feedback extracted: {feedback}")
+
+                except ValueError as e:
+                    logger.warning(f"Failed to create feedback object: {e}. Item: {item}")
+                    continue
 
             logger.info(
                 f"Extracted {len(feedbacks)} valid feedbacks from transcript {transcript_id}"

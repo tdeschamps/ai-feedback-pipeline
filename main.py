@@ -113,6 +113,7 @@ def _display_processing_result(result: dict[str, Any], transcript_id: str) -> No
         click.echo(f"   Error: {result.get('error', 'Unknown error')}")
         return
 
+    click.echo(f"Result: {result}")
     click.echo(f"✅ Processed transcript: {transcript_id}")
     click.echo(f"   📝 Feedbacks extracted: {result.get('feedbacks_extracted', 0)}")
     click.echo(f"   🎯 Matches found: {result.get('matches_found', 0)}")
@@ -141,7 +142,7 @@ def _save_results(result: dict[str, Any], output_path: Path) -> None:
 @click.argument("transcript_dir", type=click.Path(exists=True, file_okay=False))
 @click.option("--pattern", default="*.txt", help="File pattern to match")
 @click.option("--output", help="Output file for batch results")
-async def batch_process(transcript_dir: str, pattern: str, output: str) -> None:
+def batch_process(transcript_dir: str, pattern: str, output: str) -> None:
     """Process all transcripts in a directory."""
     try:
         transcript_dir_path = Path(transcript_dir)
@@ -170,10 +171,9 @@ async def batch_process(transcript_dir: str, pattern: str, output: str) -> None:
             click.echo("❌ No valid transcripts found")
             return
 
-        # Process batch
+        # Run async processing
         click.echo("🚀 Starting batch processing...")
-        pipeline = FeedbackPipeline()
-        result = await pipeline.batch_process_transcripts(transcripts)
+        result = asyncio.run(_batch_process_async(transcripts))
 
         # Output results
         click.echo("\n✅ Batch processing completed!")
@@ -195,16 +195,22 @@ async def batch_process(transcript_dir: str, pattern: str, output: str) -> None:
         raise
 
 
+async def _batch_process_async(transcripts: list[dict[str, str]]) -> dict[str, Any]:
+    """Async helper for batch processing."""
+    pipeline = FeedbackPipeline()
+    return await pipeline.batch_process_transcripts(transcripts)
+
+
 @cli.command()
-async def sync_problems() -> None:
+def sync_problems() -> None:
     """Sync and embed all Notion problems."""
     try:
         click.echo("🔄 Syncing Notion problems...")
 
-        pipeline = FeedbackPipeline()
-        success = await pipeline.sync_notion_problems()
+        # Run async processing
+        result = asyncio.run(_sync_problems_async())
 
-        if success:
+        if result:
             click.echo("✅ Problems synced successfully!")
         else:
             click.echo("❌ Failed to sync problems")
@@ -212,6 +218,12 @@ async def sync_problems() -> None:
     except Exception as e:
         click.echo(f"❌ Error: {e}", err=True)
         raise
+
+
+async def _sync_problems_async() -> bool:
+    """Async helper for syncing problems."""
+    pipeline = FeedbackPipeline()
+    return await pipeline.sync_notion_problems()
 
 
 @cli.command()
@@ -294,20 +306,141 @@ def status() -> None:
         click.echo("\n📁 Data Directory: Not found (will be created)")
 
 
-# Wrapper functions to handle async commands
-def async_command(f: Any) -> Any:
-    """Decorator to handle async click commands."""
+@cli.command()
+@click.option("--type", "feedback_type", required=True, type=click.Choice(["feature_request", "customer_pain"]), help="Type of feedback")
+@click.option("--summary", required=True, help="Brief summary of the feedback")
+@click.option("--verbatim", required=True, help="Exact quote or verbatim feedback")
+@click.option("--confidence", default=0.8, type=float, help="Confidence score (0.0-1.0)")
+@click.option("--transcript-id", default="manual", help="Source transcript ID")
+@click.option("--context", help="Additional context for the feedback")
+@click.option("--output", help="Output file for results", type=click.Path(path_type=Path))
+def process_feedback(
+    feedback_type: str,
+    summary: str,
+    verbatim: str,
+    confidence: float,
+    transcript_id: str,
+    context: str | None,
+    output: Path | None
+) -> None:
+    """Process a single feedback directly through the pipeline."""
+    try:
+        # Validate confidence
+        if not (0.0 <= confidence <= 1.0):
+            click.echo(f"❌ Confidence must be between 0.0 and 1.0, got: {confidence}", err=True)
+            sys.exit(1)
 
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
-        return asyncio.run(f(*args, **kwargs))
+        # Validate inputs
+        if not summary.strip():
+            click.echo("❌ Summary cannot be empty", err=True)
+            sys.exit(1)
 
-    return wrapper
+        if not verbatim.strip():
+            click.echo("❌ Verbatim cannot be empty", err=True)
+            sys.exit(1)
+
+        # Run async processing
+        result = asyncio.run(_process_feedback_async(
+            feedback_type, summary, verbatim, confidence, transcript_id, context
+        ))
+
+        # Output results
+        _display_feedback_processing_result(result, transcript_id)
+
+        # Save results if requested
+        if output:
+            _save_results(result, output)
+            click.echo(f"   💾 Results saved to: {output}")
+
+    except KeyboardInterrupt:
+        click.echo("\n❌ Processing interrupted by user", err=True)
+        sys.exit(1)
+    except Exception as e:
+        logger.exception("Unexpected error processing feedback")
+        click.echo(f"❌ Error: {e}", err=True)
+        sys.exit(1)
 
 
-# Apply async wrapper to async commands
-process_transcript = click.command()(async_command(process_transcript))
-batch_process = click.command()(async_command(batch_process))
-sync_problems = click.command()(async_command(sync_problems))
+async def _process_feedback_async(
+    feedback_type: str,
+    summary: str,
+    verbatim: str,
+    confidence: float,
+    transcript_id: str,
+    context: str | None
+) -> dict[str, Any]:
+    """Async wrapper for feedback processing."""
+    try:
+        from extract import Feedback
+        from datetime import datetime
+
+        # Create feedback object
+        feedback = Feedback(
+            type=feedback_type,
+            summary=summary,
+            verbatim=verbatim,
+            confidence=confidence,
+            transcript_id=transcript_id,
+            timestamp=datetime.now(),
+            context=context
+        )
+
+        # Initialize pipeline and process
+        pipeline = FeedbackPipeline()
+        results = await pipeline.process_feedbacks([feedback])
+
+        # Extract match from results
+        feedback_obj, match = results[0] if results else (feedback, None)
+
+        return {
+            "feedback": {
+                "type": feedback_obj.type,
+                "summary": feedback_obj.summary,
+                "verbatim": feedback_obj.verbatim,
+                "confidence": feedback_obj.confidence,
+                "transcript_id": feedback_obj.transcript_id,
+                "context": feedback_obj.context
+            },
+            "match": {
+                "problem_id": match.problem_id if match else None,
+                "problem_title": match.problem_title if match else None,
+                "confidence": match.confidence if match else None,
+                "similarity_score": match.similarity_score if match else None,
+                "reasoning": match.reasoning if match else None,
+            } if match else None,
+            "status": "completed" if results else "error"
+        }
+    except Exception as e:
+        logger.error(f"Feedback processing failed: {e}")
+        raise
+
+
+def _display_feedback_processing_result(result: dict[str, Any], feedback_id: str) -> None:
+    """Display feedback processing results in a user-friendly format."""
+    status = result.get("status", "unknown")
+    feedback_data = result.get("feedback", {})
+    match_data = result.get("match")
+
+    if status == "error":
+        click.echo(f"❌ Processing failed for feedback: {feedback_id}")
+        click.echo(f"   Error: {result.get('error', 'Unknown error')}")
+        return
+
+    click.echo(f"✅ Processed feedback: {feedback_id}")
+    click.echo(f"   📝 Type: {feedback_data.get('type', 'unknown')}")
+    click.echo(f"   📋 Summary: {feedback_data.get('summary', 'N/A')[:100]}...")
+    click.echo(f"   🎯 Confidence: {feedback_data.get('confidence', 0):.3f}")
+
+    if match_data:
+        click.echo(f"   🔗 Match found:")
+        click.echo(f"      📊 Problem: {match_data.get('problem_title', 'Unknown')}")
+        click.echo(f"      🎯 Match confidence: {match_data.get('confidence', 0):.3f}")
+        click.echo(f"      📈 Similarity: {match_data.get('similarity_score', 0):.3f}")
+        if match_data.get('reasoning'):
+            click.echo(f"      💭 Reasoning: {match_data['reasoning'][:100]}...")
+    else:
+        click.echo(f"   ⚠️  No match found for this feedback")
+
 
 if __name__ == "__main__":
     cli()

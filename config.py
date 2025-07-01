@@ -12,6 +12,31 @@ from pydantic_settings import BaseSettings
 load_dotenv()
 
 
+class ColoredFormatter(logging.Formatter):
+    """Colored formatter for console output."""
+
+    # ANSI color codes
+    COLORS = {
+        'DEBUG': '\033[36m',      # Cyan
+        'INFO': '\033[32m',       # Green
+        'WARNING': '\033[33m',    # Yellow
+        'ERROR': '\033[31m',      # Red
+        'CRITICAL': '\033[35m',   # Magenta
+        'RESET': '\033[0m'        # Reset to default
+    }
+
+    def format(self, record: logging.LogRecord) -> str:
+        # Get the original formatted message
+        message = super().format(record)
+
+        # Add color based on log level
+        color = self.COLORS.get(record.levelname, self.COLORS['RESET'])
+        reset = self.COLORS['RESET']
+
+        # Color the entire message
+        return f"{color}{message}{reset}"
+
+
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
@@ -51,6 +76,7 @@ class Settings(BaseSettings):
     # Logging Configuration
     log_level: str = "INFO"
     log_file: str = "pipeline.log"
+    suppress_import_warnings: bool = False
 
     model_config = {"env_file": ".env", "case_sensitive": False}
 
@@ -64,15 +90,29 @@ except Exception:
 
 
 def setup_logging() -> None:
-    """Setup logging configuration."""
+    """Setup logging configuration with colored console output."""
     if settings is None:
         return  # Skip logging setup in test environments
 
-    logging.basicConfig(
-        level=getattr(logging, settings.log_level.upper()),
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=[logging.FileHandler(settings.log_file), logging.StreamHandler()],
-    )
+    # Create formatters
+    file_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    console_formatter = ColoredFormatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+
+    # Create handlers
+    file_handler = logging.FileHandler(settings.log_file)
+    file_handler.setFormatter(file_formatter)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(console_formatter)
+
+    # Configure root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(getattr(logging, settings.log_level.upper()))
+
+    # Clear any existing handlers and add our custom ones
+    root_logger.handlers.clear()
+    root_logger.addHandler(file_handler)
+    root_logger.addHandler(console_handler)
 
 
 def get_llm_config() -> dict[str, Any]:

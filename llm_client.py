@@ -12,8 +12,8 @@ from unittest.mock import Mock
 try:
     from langchain.schema import HumanMessage, SystemMessage
     from langchain_anthropic import ChatAnthropic
-    from langchain_community.embeddings import HuggingFaceEmbeddings
-    from langchain_community.llms import Ollama
+    from langchain_huggingface import HuggingFaceEmbeddings
+    from langchain_ollama import ChatOllama
     from langchain_openai import ChatOpenAI, OpenAIEmbeddings
     from pydantic import SecretStr
 except ImportError as e:
@@ -144,9 +144,11 @@ class OllamaClient(LLMClient):
 
     def __init__(self) -> None:
         config = get_llm_config()
-        self.llm = Ollama(
-            model=config.get("model", "llama2"),
+        self.llm = ChatOllama(
+            model=config.get("model", "mistral"),
             base_url=config.get("base_url", "http://localhost:11434"),
+            temperature=0.1,
+            extract_reasoning=True,
         )
         self.embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-mpnet-base-v2"
@@ -155,20 +157,19 @@ class OllamaClient(LLMClient):
     async def generate(self, messages: list[dict[str, str]], **kwargs: Any) -> LLMResponse:
         """Generate response using Ollama."""
         try:
-            # Combine messages into single prompt for Ollama
-            prompt = ""
+            # Convert messages to LangChain format
+            lc_messages: list[SystemMessage | HumanMessage] = []
             for msg in messages:
                 if msg["role"] == "system":
-                    prompt += f"System: {msg['content']}\n\n"
+                    lc_messages.append(SystemMessage(content=msg["content"]))
                 elif msg["role"] == "user":
-                    prompt += f"User: {msg['content']}\n\n"
-            prompt += "Assistant:"
+                    lc_messages.append(HumanMessage(content=msg["content"]))
 
-            response = await self.llm.ainvoke(prompt)
-            return LLMResponse(content=str(response), model=self.llm.model, provider="ollama")
-        except Exception as e:
-            logger.error(f"Ollama generation error: {e}")
-            raise
+            response = await self.llm.ainvoke(lc_messages)
+            return LLMResponse(content=response.content, model=self.llm.model, provider="ollama")
+        except Exception as fallback_e:
+            logger.error(f"Ollama fallback generation error: {fallback_e}")
+            raise fallback_e  # Raise the original error with context
 
     async def embed(self, texts: list[str]) -> list[list[float]]:
         """Generate embeddings using HuggingFace."""
