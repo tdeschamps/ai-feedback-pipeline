@@ -2,13 +2,13 @@
 Comprehensive pytest tests for pipeline.py
 """
 
-import asyncio
 import os
 import sys
 from datetime import datetime
 from unittest.mock import AsyncMock, Mock, mock_open, patch
 
 import pytest
+
 
 # Add project to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -44,6 +44,7 @@ def mock_modules():
 def mock_feedback():
     """Create a mock feedback object for testing."""
     import extract
+
     return extract.Feedback(
         type="feature_request",
         summary="Test feedback",
@@ -170,7 +171,9 @@ class TestProcessTranscript:
             assert "Extraction failed" in result["error"]
 
     @pytest.mark.asyncio
-    async def test_process_transcript_with_feedback_success(self, mock_modules, mock_feedback, mock_match):
+    async def test_process_transcript_with_feedback_success(
+        self, mock_modules, mock_feedback, mock_match
+    ):
         """Test process_transcript with successful feedback processing."""
         with (
             patch.dict("sys.modules", mock_modules),
@@ -193,9 +196,7 @@ class TestProcessTranscript:
 
                 # Setup mocks
                 mock_extractor_instance = Mock()
-                mock_extractor_instance.extract_feedback = AsyncMock(
-                    return_value=[mock_feedback]
-                )
+                mock_extractor_instance.extract_feedback = AsyncMock(return_value=[mock_feedback])
                 mock_extractor.return_value = mock_extractor_instance
 
                 mock_notion_instance = Mock()
@@ -228,9 +229,7 @@ class TestProcessTranscript:
                 mock_notion_instance.update_problem_with_feedback.assert_called_once_with(
                     "problem-123", mock_feedback, 0.8
                 )
-                mock_metrics_instance.add_result.assert_called_once_with(
-                    mock_feedback, mock_match
-                )
+                mock_metrics_instance.add_result.assert_called_once_with(mock_feedback, mock_match)
 
 
 class TestSyncNotionProblems:
@@ -326,9 +325,7 @@ class TestSyncNotionProblems:
 
             # Setup mocks
             mock_notion_instance = Mock()
-            mock_notion_instance.get_all_problems = Mock(
-                side_effect=Exception("Notion API Error")
-            )
+            mock_notion_instance.get_all_problems = Mock(side_effect=Exception("Notion API Error"))
             mock_notion.return_value = mock_notion_instance
 
             pipe = pipeline.FeedbackPipeline()
@@ -530,9 +527,7 @@ class TestProcessFeedbacks:
 
                 # Verify no update was made due to low confidence
                 mock_notion_instance.update_problem_with_feedback.assert_not_called()
-                mock_metrics_instance.add_result.assert_called_once_with(
-                    mock_feedback, mock_match
-                )
+                mock_metrics_instance.add_result.assert_called_once_with(mock_feedback, mock_match)
 
     @pytest.mark.asyncio
     async def test_process_feedbacks_no_match(self, mock_modules):

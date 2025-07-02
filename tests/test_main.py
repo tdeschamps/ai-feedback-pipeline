@@ -9,9 +9,9 @@ import tempfile
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
-import asyncio
 
 import pytest
+
 
 # Add project to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -48,6 +48,7 @@ class TestCLIGroup:
         """Test CLI module imports successfully."""
         with patch.dict("sys.modules", mock_modules):
             import main
+
             assert hasattr(main, "cli"), "CLI group not found"
 
     def test_cli_setup_with_click_mocking(self, mock_modules):
@@ -95,70 +96,65 @@ class TestProcessTranscriptCommand:
 
                 assert result["status"] == "completed"
                 assert result["feedbacks_extracted"] == 2
-                mock_pipeline.process_transcript.assert_called_once_with(
-                    "test content", "test-id"
-                )
+                mock_pipeline.process_transcript.assert_called_once_with("test content", "test-id")
 
     def test_display_processing_result_success(self, mock_modules):
         """Test display of successful processing results."""
-        with patch.dict("sys.modules", mock_modules):
-            with patch("main.click") as mock_click:
-                import main
+        with patch.dict("sys.modules", mock_modules), patch("main.click") as mock_click:
+            import main
 
-                result = {
-                    "status": "completed",
-                    "feedbacks_extracted": 3,
-                    "matches_found": 2,
-                    "problems_updated": 1,
-                }
+            result = {
+                "status": "completed",
+                "feedbacks_extracted": 3,
+                "matches_found": 2,
+                "problems_updated": 1,
+            }
 
-                main._display_processing_result(result, "test-transcript")
+            main._display_processing_result(result, "test-transcript")
 
-                # Verify click.echo was called multiple times
-                assert mock_click.echo.called, "click.echo should have been called"
-                call_count = mock_click.echo.call_count
-                assert call_count >= 5, f"Expected multiple echo calls, got {call_count}"
+            # Verify click.echo was called multiple times
+            assert mock_click.echo.called, "click.echo should have been called"
+            call_count = mock_click.echo.call_count
+            assert call_count >= 5, f"Expected multiple echo calls, got {call_count}"
 
     def test_display_processing_result_error(self, mock_modules):
         """Test display of error processing results."""
-        with patch.dict("sys.modules", mock_modules):
-            with patch("main.click") as mock_click:
-                import main
+        with patch.dict("sys.modules", mock_modules), patch("main.click") as mock_click:
+            import main
 
-                result = {"status": "error", "error": "Test error message"}
+            result = {"status": "error", "error": "Test error message"}
 
-                main._display_processing_result(result, "test-transcript")
+            main._display_processing_result(result, "test-transcript")
 
-                # Verify error display
-                assert mock_click.echo.called, "click.echo should have been called for error"
+            # Verify error display
+            assert mock_click.echo.called, "click.echo should have been called for error"
 
     def test_display_processing_result_warnings(self, mock_modules):
         """Test display of processing results with warnings."""
-        with patch.dict("sys.modules", mock_modules):
-            with patch("main.click") as mock_click:
-                import main
+        with patch.dict("sys.modules", mock_modules), patch("main.click") as mock_click:
+            import main
 
-                # Test no feedbacks extracted warning
-                result_no_feedbacks = {
-                    "status": "completed",
-                    "feedbacks_extracted": 0,
-                    "matches_found": 0,
-                    "problems_updated": 0,
-                }
+            # Test no feedbacks extracted warning
+            result_no_feedbacks = {
+                "status": "completed",
+                "feedbacks_extracted": 0,
+                "matches_found": 0,
+                "problems_updated": 0,
+            }
 
-                main._display_processing_result(result_no_feedbacks, "test-transcript")
+            main._display_processing_result(result_no_feedbacks, "test-transcript")
 
-                # Test no matches found warning
-                result_no_matches = {
-                    "status": "completed",
-                    "feedbacks_extracted": 2,
-                    "matches_found": 0,
-                    "problems_updated": 0,
-                }
+            # Test no matches found warning
+            result_no_matches = {
+                "status": "completed",
+                "feedbacks_extracted": 2,
+                "matches_found": 0,
+                "problems_updated": 0,
+            }
 
-                main._display_processing_result(result_no_matches, "test-transcript")
+            main._display_processing_result(result_no_matches, "test-transcript")
 
-                assert mock_click.echo.called, "click.echo should have been called for warnings"
+            assert mock_click.echo.called, "click.echo should have been called for warnings"
 
 
 class TestFileOperations:
@@ -442,7 +438,10 @@ class TestProcessFeedbackCommand:
                         None,
                     )
 
-                assert "Test pipeline error" in str(exc_info.value) or "pipeline processing failed" in str(exc_info.value).lower()
+                assert (
+                    "Test pipeline error" in str(exc_info.value)
+                    or "pipeline processing failed" in str(exc_info.value).lower()
+                )
 
     def test_display_feedback_processing_result_success_with_match(self, mock_modules):
         """Test display of successful feedback processing results with match."""
@@ -474,46 +473,46 @@ class TestProcessFeedbackCommand:
                 # Verify click.echo was called multiple times for all the information
                 assert mock_click.echo.called, "click.echo should have been called"
                 call_count = mock_click.echo.call_count
-                assert call_count >= 8, f"Expected multiple echo calls for detailed info, got {call_count}"
+                assert call_count >= 8, (
+                    f"Expected multiple echo calls for detailed info, got {call_count}"
+                )
 
     def test_display_feedback_processing_result_success_no_match(self, mock_modules):
         """Test display of successful feedback processing results without match."""
-        with patch.dict("sys.modules", mock_modules):
-            with patch("main.click") as mock_click:
-                import main
+        with patch.dict("sys.modules", mock_modules), patch("main.click") as mock_click:
+            import main
 
-                result = {
-                    "status": "completed",
-                    "feedback": {
-                        "type": "customer_pain",
-                        "summary": "Test customer pain summary",
-                        "verbatim": "This process is very confusing",
-                        "confidence": 0.75,
-                        "transcript_id": "test-456",
-                        "context": None,
-                    },
-                    "match": None,
-                }
+            result = {
+                "status": "completed",
+                "feedback": {
+                    "type": "customer_pain",
+                    "summary": "Test customer pain summary",
+                    "verbatim": "This process is very confusing",
+                    "confidence": 0.75,
+                    "transcript_id": "test-456",
+                    "context": None,
+                },
+                "match": None,
+            }
 
-                main._display_feedback_processing_result(result, "test-456")
+            main._display_feedback_processing_result(result, "test-456")
 
-                # Verify click.echo was called
-                assert mock_click.echo.called, "click.echo should have been called"
-                call_count = mock_click.echo.call_count
-                assert call_count >= 5, f"Expected multiple echo calls, got {call_count}"
+            # Verify click.echo was called
+            assert mock_click.echo.called, "click.echo should have been called"
+            call_count = mock_click.echo.call_count
+            assert call_count >= 5, f"Expected multiple echo calls, got {call_count}"
 
     def test_display_feedback_processing_result_error(self, mock_modules):
         """Test display of error feedback processing results."""
-        with patch.dict("sys.modules", mock_modules):
-            with patch("main.click") as mock_click:
-                import main
+        with patch.dict("sys.modules", mock_modules), patch("main.click") as mock_click:
+            import main
 
-                result = {"status": "error", "error": "Failed to process feedback"}
+            result = {"status": "error", "error": "Failed to process feedback"}
 
-                main._display_feedback_processing_result(result, "test-error")
+            main._display_feedback_processing_result(result, "test-error")
 
-                # Verify error display
-                assert mock_click.echo.called, "click.echo should have been called for error"
+            # Verify error display
+            assert mock_click.echo.called, "click.echo should have been called for error"
 
     def test_process_feedback_command_validation(self, mock_modules):
         """Test process feedback command validation logic."""
@@ -546,5 +545,9 @@ class TestProcessFeedbackCommand:
 
             # Test that process_feedback command exists
             assert hasattr(main, "process_feedback"), "process_feedback command should exist"
-            assert hasattr(main, "_process_feedback_async"), "_process_feedback_async helper should exist"
-            assert hasattr(main, "_display_feedback_processing_result"), "_display_feedback_processing_result helper should exist"
+            assert hasattr(main, "_process_feedback_async"), (
+                "_process_feedback_async helper should exist"
+            )
+            assert hasattr(main, "_display_feedback_processing_result"), (
+                "_display_feedback_processing_result helper should exist"
+            )

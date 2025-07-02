@@ -54,7 +54,7 @@ dev = [
 ]
 
 [project.scripts]
-feedback-pipeline = "main:cli"
+ai-feedback-pipeline = "main:cli"
 
 [tool.hatch.build.targets.wheel]
 packages = ["."]

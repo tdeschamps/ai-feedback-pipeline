@@ -17,6 +17,9 @@ from pipeline import FeedbackPipeline
 
 logger = logging.getLogger(__name__)
 
+# Version information
+__version__ = "1.0.0"
+
 
 @click.group()
 @click.option(
@@ -26,9 +29,33 @@ logger = logging.getLogger(__name__)
     type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]),
 )
 @click.option("--config", help="Path to configuration file", type=click.Path(exists=True))
+@click.version_option(version=__version__, prog_name="ai-feedback-pipeline")
 @click.pass_context
 def cli(ctx: click.Context, log_level: str, config: str | None) -> None:
-    """AI-Powered Feedback Categorization & RAG Pipeline."""
+    """
+    🧠 AI-Powered Feedback Categorization & RAG Pipeline
+
+    Extract customer feedback from transcripts, match to existing problems,
+    and automatically update your Notion database using advanced AI and
+    semantic search capabilities.
+
+    Examples:
+
+        # Process a single transcript
+        ai-feedback-pipeline process-transcript call_transcript.txt
+
+        # Process all transcripts in a directory
+        ai-feedback-pipeline batch-process ./transcripts/
+
+        # Sync Notion problems to vector store
+        ai-feedback-pipeline sync-problems
+
+        # Check pipeline status and configuration
+        ai-feedback-pipeline status
+
+        # Show recent extracted feedbacks
+        ai-feedback-pipeline show-feedbacks --limit 5
+    """
     # Ensure context object exists
     ctx.ensure_object(dict)
 

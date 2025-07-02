@@ -105,10 +105,21 @@ class NotionClient:
             customer_feedbacks = properties.get("🚀 Customer Feedbacks 1", {})
             for feedback in customer_feedbacks.get("rich_text", []):
                 feedback_text = feedback.get("text", {}).get("content", "")
-                if feedback_text and "(" in feedback_text:
-                    # Extract text before the first parenthesis
-                    feedback_text = feedback_text.split("(")[0].strip()
-                    feedbacks.append(feedback_text) if feedback_text else None
+                if feedback_text:
+                    # Split by parentheses and extract clean text parts
+                    parts = feedback_text.split("(")
+
+                    # Add the first part (before any parentheses)
+                    if parts[0].strip():
+                        feedbacks.append(parts[0].strip())
+
+                    # Process remaining parts (after each opening parenthesis)
+                    for part in parts[1:]:
+                        if ")" in part:
+                            # Extract text after the closing parenthesis
+                            text_after_paren = part.split(")", 1)[1].strip()
+                            if text_after_paren:
+                                feedbacks.append(text_after_paren)
             # Extract description from rich text property
             description = ""
             if "Description" in properties:

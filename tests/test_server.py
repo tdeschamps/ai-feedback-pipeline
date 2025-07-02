@@ -5,8 +5,9 @@ Tests for server.py - FastAPI server endpoints.
 import os
 import sys
 from unittest.mock import Mock, patch
+
 import pytest
-import asyncio
+
 
 # Add project to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -66,7 +67,6 @@ def comprehensive_mocks():
 def test_pydantic_models():
     """Test Pydantic model creation."""
     # This test can be expanded with actual model testing
-    pass
 
 
 def test_app_initialization(comprehensive_mocks):
@@ -74,6 +74,7 @@ def test_app_initialization(comprehensive_mocks):
     with patch.dict("sys.modules", comprehensive_mocks):
         try:
             from server import app
+
             assert app is not None
         except ImportError:
             pytest.skip("FastAPI app skipped (dependencies not available)")
@@ -232,9 +233,7 @@ def test_feedback_validation_types(comprehensive_mocks, feedback_type):
         try:
             from server import FeedbackRequest
 
-            request = FeedbackRequest(
-                content="Test content", confidence=0.8, type=feedback_type
-            )
+            request = FeedbackRequest(content="Test content", confidence=0.8, type=feedback_type)
             assert request.type == feedback_type
         except ImportError:
             pytest.skip("Feedback validation skipped (FastAPI not available)")
