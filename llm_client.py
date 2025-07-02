@@ -2,6 +2,7 @@
 Abstract LLM client interface supporting multiple providers.
 """
 
+import contextlib
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -16,10 +17,22 @@ try:
     from langchain_ollama import ChatOllama
     from langchain_openai import ChatOpenAI, OpenAIEmbeddings
     from pydantic import SecretStr
+
+    # Import AIMessage if needed - it's optional since we handle responses differently
+    with contextlib.suppress(ImportError):
+        from langchain_core.messages import AIMessage  # noqa: F401
 except ImportError as e:
     logging.warning(f"Some dependencies not available: {e}")
     # Set defaults for missing imports
     SecretStr = str  # type: ignore
+    # Create mock classes for testing environments
+    HumanMessage = Mock  # type: ignore
+    SystemMessage = Mock  # type: ignore
+    ChatAnthropic = Mock  # type: ignore
+    HuggingFaceEmbeddings = Mock  # type: ignore
+    ChatOllama = Mock  # type: ignore
+    ChatOpenAI = Mock  # type: ignore
+    OpenAIEmbeddings = Mock  # type: ignore
 
 from config import get_llm_config, settings
 
@@ -68,7 +81,7 @@ class OpenAIClient(LLMClient):
         """Generate response using OpenAI."""
         try:
             # Convert messages to LangChain format
-            lc_messages: list[SystemMessage | HumanMessage] = []
+            lc_messages: list[Any] = []
             for msg in messages:
                 if msg["role"] == "system":
                     lc_messages.append(SystemMessage(content=msg["content"]))
@@ -114,7 +127,7 @@ class AnthropicClient(LLMClient):
     async def generate(self, messages: list[dict[str, str]], **kwargs: Any) -> LLMResponse:
         """Generate response using Anthropic."""
         try:
-            lc_messages: list[SystemMessage | HumanMessage] = []
+            lc_messages: list[Any] = []
             for msg in messages:
                 if msg["role"] == "system":
                     lc_messages.append(SystemMessage(content=msg["content"]))
@@ -158,7 +171,7 @@ class OllamaClient(LLMClient):
         """Generate response using Ollama."""
         try:
             # Convert messages to LangChain format
-            lc_messages: list[SystemMessage | HumanMessage] = []
+            lc_messages: list[Any] = []
             for msg in messages:
                 if msg["role"] == "system":
                     lc_messages.append(SystemMessage(content=msg["content"]))

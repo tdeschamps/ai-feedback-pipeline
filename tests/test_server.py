@@ -5,7 +5,8 @@ Tests for server.py - FastAPI server endpoints.
 import os
 import sys
 from unittest.mock import Mock, patch
-
+import pytest
+import asyncio
 
 # Add project to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -16,7 +17,8 @@ os.environ.setdefault("ANTHROPIC_API_KEY", "test-key")
 os.environ.setdefault("NOTION_API_KEY", "test-key")
 
 
-def create_comprehensive_mocks():
+@pytest.fixture
+def comprehensive_mocks():
     """Create comprehensive mocks for all external dependencies."""
     # Mock LangChain message classes
     mock_human_message = Mock()
@@ -63,55 +65,37 @@ def create_comprehensive_mocks():
 
 def test_pydantic_models():
     """Test Pydantic model creation."""
-    print("Testing Pydantic models...")
+    # This test can be expanded with actual model testing
+    pass
 
 
-def test_app_initialization():
+def test_app_initialization(comprehensive_mocks):
     """Test FastAPI app initialization."""
-    print("Testing FastAPI app initialization...")
-
-    mock_modules = create_comprehensive_mocks()
-
-    with patch.dict("sys.modules", mock_modules):
+    with patch.dict("sys.modules", comprehensive_mocks):
         try:
             from server import app
-
             assert app is not None
-            print("✓ FastAPI app initializes successfully")
         except ImportError:
-            print("✓ FastAPI app skipped (dependencies not available)")
+            pytest.skip("FastAPI app skipped (dependencies not available)")
 
 
-def test_pipeline_dependency():
+@pytest.mark.asyncio
+async def test_pipeline_dependency(comprehensive_mocks):
     """Test pipeline dependency injection."""
-    print("Testing pipeline dependency...")
-
-    mock_modules = create_comprehensive_mocks()
-
-    with patch.dict("sys.modules", mock_modules):
+    with patch.dict("sys.modules", comprehensive_mocks):
         try:
             from server import get_pipeline
 
-            async def run_test():
-                pipeline = await get_pipeline()
-                assert pipeline is not None
-                assert hasattr(pipeline, "process_transcript")
-
-            import asyncio
-
-            asyncio.run(run_test())
-            print("✓ Pipeline dependency works correctly")
+            pipeline = await get_pipeline()
+            assert pipeline is not None
+            assert hasattr(pipeline, "process_transcript")
         except ImportError:
-            print("✓ Pipeline dependency skipped (FastAPI not available)")
+            pytest.skip("Pipeline dependency skipped (FastAPI not available)")
 
 
-def test_webhook_payload_model():
+def test_webhook_payload_model(comprehensive_mocks):
     """Test webhook payload model."""
-    print("Testing webhook payload model...")
-
-    mock_modules = create_comprehensive_mocks()
-
-    with patch.dict("sys.modules", mock_modules):
+    with patch.dict("sys.modules", comprehensive_mocks):
         try:
             from server import WebhookPayload
 
@@ -123,18 +107,13 @@ def test_webhook_payload_model():
             )
             assert payload.event_type == "transcript_ready"
             assert payload.transcript_id == "test-id"
-            print("✓ Webhook payload model works correctly")
         except ImportError:
-            print("✓ Webhook payload skipped (FastAPI not available)")
+            pytest.skip("Webhook payload skipped (FastAPI not available)")
 
 
-def test_batch_processing_model():
+def test_batch_processing_model(comprehensive_mocks):
     """Test batch processing models."""
-    print("Testing batch processing models...")
-
-    mock_modules = create_comprehensive_mocks()
-
-    with patch.dict("sys.modules", mock_modules):
+    with patch.dict("sys.modules", comprehensive_mocks):
         try:
             from server import BatchProcessingResponse, BatchTranscriptRequest, ProcessingResponse
 
@@ -168,18 +147,13 @@ def test_batch_processing_model():
             )
             assert batch_response.total_transcripts == 2
             assert batch_response.success_rate == 1.0
-            print("✓ Batch processing models work correctly")
         except ImportError:
-            print("✓ Batch processing skipped (FastAPI not available)")
+            pytest.skip("Batch processing skipped (FastAPI not available)")
 
 
-def test_feedback_models():
+def test_feedback_models(comprehensive_mocks):
     """Test feedback request and response models."""
-    print("Testing feedback models...")
-
-    mock_modules = create_comprehensive_mocks()
-
-    with patch.dict("sys.modules", mock_modules):
+    with patch.dict("sys.modules", comprehensive_mocks):
         try:
             from server import FeedbackRequest, FeedbackResponse
 
@@ -227,18 +201,13 @@ def test_feedback_models():
             assert feedback_response_no_match.match_found is False
             assert feedback_response_no_match.problem_id is None
 
-            print("✓ Feedback models work correctly")
         except ImportError:
-            print("✓ Feedback models skipped (FastAPI not available)")
+            pytest.skip("Feedback models skipped (FastAPI not available)")
 
 
-def test_feedback_processing_endpoint():
+def test_feedback_processing_endpoint(comprehensive_mocks):
     """Test the feedback processing endpoint functionality."""
-    print("Testing feedback processing endpoint...")
-
-    mock_modules = create_comprehensive_mocks()
-
-    with patch.dict("sys.modules", mock_modules):
+    with patch.dict("sys.modules", comprehensive_mocks):
         try:
             from server import FeedbackRequest
 
@@ -252,57 +221,35 @@ def test_feedback_processing_endpoint():
             assert request.confidence == 0.85
             assert request.type == "feature_request"
 
-            print("✓ Feedback processing endpoint structure is correct")
-
         except ImportError:
-            print("✓ Feedback processing endpoint skipped (dependencies not available)")
+            pytest.skip("Feedback processing endpoint skipped (dependencies not available)")
 
 
-def test_feedback_validation():
-    """Test feedback input validation."""
-    print("Testing feedback validation...")
-
-    mock_modules = create_comprehensive_mocks()
-
-    with patch.dict("sys.modules", mock_modules):
+@pytest.mark.parametrize("feedback_type", ["feature_request", "customer_pain"])
+def test_feedback_validation_types(comprehensive_mocks, feedback_type):
+    """Test feedback input validation for different types."""
+    with patch.dict("sys.modules", comprehensive_mocks):
         try:
             from server import FeedbackRequest
 
-            # Test valid feedback types
-            valid_types = ["feature_request", "customer_pain"]
-            for feedback_type in valid_types:
-                request = FeedbackRequest(
-                    content="Test content", confidence=0.8, type=feedback_type
-                )
-                assert request.type == feedback_type
-
-            # Test confidence bounds
-            valid_confidences = [0.0, 0.5, 1.0]
-            for confidence in valid_confidences:
-                request = FeedbackRequest(
-                    content="Test content", confidence=confidence, type="feature_request"
-                )
-                assert request.confidence == confidence
-
-            print("✓ Feedback validation works correctly")
-
+            request = FeedbackRequest(
+                content="Test content", confidence=0.8, type=feedback_type
+            )
+            assert request.type == feedback_type
         except ImportError:
-            print("✓ Feedback validation skipped (FastAPI not available)")
+            pytest.skip("Feedback validation skipped (FastAPI not available)")
 
 
-def run_all_tests():
-    """Run all server tests."""
-    print("Running server tests...")
-    test_pydantic_models()
-    test_app_initialization()
-    test_pipeline_dependency()
-    test_webhook_payload_model()
-    test_batch_processing_model()
-    test_feedback_models()
-    test_feedback_processing_endpoint()
-    test_feedback_validation()
-    print("✓ All server tests passed!")
+@pytest.mark.parametrize("confidence", [0.0, 0.5, 1.0])
+def test_feedback_validation_confidence(comprehensive_mocks, confidence):
+    """Test feedback input validation for confidence bounds."""
+    with patch.dict("sys.modules", comprehensive_mocks):
+        try:
+            from server import FeedbackRequest
 
-
-if __name__ == "__main__":
-    run_all_tests()
+            request = FeedbackRequest(
+                content="Test content", confidence=confidence, type="feature_request"
+            )
+            assert request.confidence == confidence
+        except ImportError:
+            pytest.skip("Feedback validation skipped (FastAPI not available)")

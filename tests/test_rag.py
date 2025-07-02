@@ -6,7 +6,7 @@ import os
 import sys
 from datetime import datetime
 from unittest.mock import Mock, patch
-
+import pytest
 
 # Add project to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -16,11 +16,10 @@ os.environ.setdefault("OPENAI_API_KEY", "test-key")
 os.environ.setdefault("ANTHROPIC_API_KEY", "test-key")
 
 
-def test_match_result_dataclass():
-    """Test MatchResult dataclass."""
-    print("Testing MatchResult dataclass...")
-
-    mock_modules = {
+@pytest.fixture
+def mock_modules():
+    """Fixture for mocking external modules."""
+    return {
         "langchain.schema": Mock(),
         "langchain_anthropic": Mock(),
         "langchain_community.embeddings": Mock(),
@@ -31,6 +30,9 @@ def test_match_result_dataclass():
         "notion_client": Mock(),
     }
 
+
+def test_match_result_dataclass(mock_modules):
+    """Test MatchResult dataclass."""
     with patch.dict("sys.modules", mock_modules):
         import rag
 
@@ -48,24 +50,9 @@ def test_match_result_dataclass():
         assert match.reasoning is not None
         assert "export" in match.reasoning.lower()
 
-    print("✓ MatchResult dataclass works")
 
-
-def test_rag_matcher_initialization():
+def test_rag_matcher_initialization(mock_modules):
     """Test RAGMatcher initialization."""
-    print("Testing RAGMatcher initialization...")
-
-    mock_modules = {
-        "langchain.schema": Mock(),
-        "langchain_anthropic": Mock(),
-        "langchain_community.embeddings": Mock(),
-        "langchain_community.llms": Mock(),
-        "langchain_openai": Mock(),
-        "chromadb": Mock(),
-        "pinecone": Mock(),
-        "notion_client": Mock(),
-    }
-
     with patch.dict("sys.modules", mock_modules), patch("config.settings") as mock_settings:
         mock_settings.vector_store = "chromadb"
         mock_settings.llm_provider = "openai"
@@ -81,24 +68,9 @@ def test_rag_matcher_initialization():
             assert hasattr(matcher, "llm_client")
             assert hasattr(matcher, "embedding_manager")
 
-    print("✓ RAGMatcher initialization works")
 
-
-def test_matching_metrics():
+def test_matching_metrics(mock_modules):
     """Test MatchingMetrics functionality."""
-    print("Testing MatchingMetrics...")
-
-    mock_modules = {
-        "langchain.schema": Mock(),
-        "langchain_anthropic": Mock(),
-        "langchain_community.embeddings": Mock(),
-        "langchain_community.llms": Mock(),
-        "langchain_openai": Mock(),
-        "chromadb": Mock(),
-        "pinecone": Mock(),
-        "notion_client": Mock(),
-    }
-
     with patch.dict("sys.modules", mock_modules):
         import rag
 
@@ -144,28 +116,13 @@ def test_matching_metrics():
         assert stats["match_rate"] == 1.0  # All feedbacks matched
         assert stats["avg_confidence"] == 0.8  # (0.9 + 0.7) / 2
 
-    print("✓ MatchingMetrics works")
 
-
-def test_rag_confidence_scoring():
+def test_rag_confidence_scoring(mock_modules):
     """Test RAG confidence scoring logic."""
-    print("Testing RAG confidence scoring...")
-
-    mock_modules = {
-        "langchain.schema": Mock(),
-        "langchain_anthropic": Mock(),
-        "langchain_community.embeddings": Mock(),
-        "langchain_community.llms": Mock(),
-        "langchain_openai": Mock(),
-        "chromadb": Mock(),
-        "pinecone": Mock(),
-        "notion_client": Mock(),
-    }
-
     with patch.dict("sys.modules", mock_modules), patch("config.settings") as mock_settings:
         mock_settings.vector_store = "chromadb"
         mock_settings.matching_confidence_threshold = 0.75
-        mock_settings.llm_provider = "openai"  # Add this
+        mock_settings.llm_provider = "openai"
 
         with patch("embed.chromadb"), patch("rag.get_llm_client"):
             import rag
@@ -181,49 +138,3 @@ def test_rag_confidence_scoring():
         prompt = matcher._build_rerank_prompt()
         assert "confidence" in prompt
         assert "JSON" in prompt
-
-    print("✓ RAG confidence scoring works")
-
-
-def run_rag_tests():
-    """Run all RAG tests."""
-    print("=" * 50)
-    print("Running RAG Tests")
-    print("=" * 50)
-
-    tests = [
-        test_match_result_dataclass,
-        test_rag_matcher_initialization,
-        test_matching_metrics,
-        test_rag_confidence_scoring,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except Exception as e:
-            print(f"✗ {test.__name__} failed: {e}")
-            import traceback
-
-            traceback.print_exc()
-            failed += 1
-
-    print("=" * 50)
-    print(f"RAG Tests: {passed} passed, {failed} failed")
-    print("=" * 50)
-
-    return failed == 0
-
-
-def run_all_tests():
-    """Run all RAG tests."""
-    return run_rag_tests()
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

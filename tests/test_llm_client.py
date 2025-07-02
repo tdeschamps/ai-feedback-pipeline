@@ -12,10 +12,33 @@ import pytest
 # Add project to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Mock problematic imports before they are imported
+sys.modules["langchain_huggingface"] = Mock()
+sys.modules["langchain_openai"] = Mock()
+sys.modules["langchain_anthropic"] = Mock()
+sys.modules["langchain_community"] = Mock()
+sys.modules["langchain_core"] = Mock()
+sys.modules["langchain_core.messages"] = Mock()
+
+
+# Create a simple mock AIMessage that doesn't trigger Pydantic validation
+class MockAIMessage:
+    def __init__(self, content: str, **kwargs):
+        self.content = content
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+
+# Set up the mock module
+mock_messages_module = Mock()
+mock_messages_module.AIMessage = MockAIMessage
+sys.modules["langchain_core.messages"] = mock_messages_module
+
 # Set environment variables
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 os.environ.setdefault("ANTHROPIC_API_KEY", "test-key")
 os.environ.setdefault("LLM_PROVIDER", "openai")
+os.environ.setdefault("LANGCHAIN_TRACING_V2", "false")
 
 
 class TestLLMResponse:
@@ -218,9 +241,8 @@ class TestOpenAIClient:
         ):
             mock_settings.embedding_model = "text-embedding-ada-002"
 
-            # Mock the LangChain response
-            mock_response = Mock()
-            mock_response.content = "This is a test response"
+            # Create a proper AIMessage mock with type field
+            mock_response = MockAIMessage(content="This is a test response")
 
             mock_chat_openai = Mock()
             mock_chat_openai.ainvoke = AsyncMock(return_value=mock_response)
@@ -324,9 +346,8 @@ class TestAnthropicClient:
         ):
             mock_settings.embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
 
-            # Mock the LangChain response
-            mock_response = Mock()
-            mock_response.content = "This is Claude's response"
+            # Create a proper AIMessage mock with type field
+            mock_response = MockAIMessage(content="This is Claude's response")
 
             mock_chat_anthropic = Mock()
             mock_chat_anthropic.ainvoke = AsyncMock(return_value=mock_response)
@@ -400,9 +421,8 @@ class TestOllamaClient:
         ):
             mock_settings.embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
 
-            # Mock the LangChain response
-            mock_response = Mock()
-            mock_response.content = "This is Mistral's response"
+            # Create a proper AIMessage mock with type field
+            mock_response = MockAIMessage(content="This is Mistral's response")
 
             mock_chat_ollama = Mock()
             mock_chat_ollama.ainvoke = AsyncMock(return_value=mock_response)
@@ -428,8 +448,8 @@ class TestOllamaClient:
                 assert response.provider == "ollama"
 
 
-# Legacy test functions for backwards compatibility
-def test_llm_response_dataclass():
+# Legacy test functions for backwards compatibility (prefixed with _ to avoid pytest pickup)
+def _test_llm_response_dataclass():
     """Test LLMResponse dataclass."""
     test_instance = TestLLMResponse()
     test_instance.test_llm_response_creation_full()
@@ -438,7 +458,7 @@ def test_llm_response_dataclass():
     return True
 
 
-def test_get_llm_client_factory():
+def _test_get_llm_client_factory():
     """Test the LLM client factory function."""
     test_instance = TestLLMClientFactory()
     test_instance.test_get_llm_client_no_settings()
@@ -446,7 +466,7 @@ def test_get_llm_client_factory():
     return True
 
 
-def test_client_types():
+def _test_client_types():
     """Test that client classes can be imported and instantiated."""
     test_instance = TestLLMClientTypes()
     test_instance.test_client_inheritance()
@@ -454,7 +474,7 @@ def test_client_types():
     return True
 
 
-def test_client_instantiation_with_mocks():
+def _test_client_instantiation_with_mocks():
     """Test client instantiation with mocked dependencies."""
     test_instance = TestLLMClientTypes()
     test_instance.test_client_instantiation_openai()
@@ -464,18 +484,16 @@ def test_client_instantiation_with_mocks():
     return True
 
 
-def test_factory_with_providers():
+def _test_factory_with_providers():
     """Test factory function with different providers."""
     test_instance = TestLLMClientFactory()
     test_instance.test_get_llm_client_openai()
     test_instance.test_get_llm_client_anthropic()
     test_instance.test_get_llm_client_ollama()
 
-    try:
-        test_instance.test_get_llm_client_unsupported()
-        raise AssertionError("Should have raised ValueError")
-    except ValueError:
-        pass
+    # For the legacy test runner, we need to handle the pytest.raises manually
+    # The test_get_llm_client_unsupported uses pytest.raises which doesn't re-raise
+    test_instance.test_get_llm_client_unsupported()  # This should pass without raising
 
     print("✓ Factory provider selection works")
     return True
@@ -488,11 +506,11 @@ def run_llm_client_tests():
     print("=" * 60)
 
     tests = [
-        test_llm_response_dataclass,
-        test_get_llm_client_factory,
-        test_client_types,
-        test_client_instantiation_with_mocks,
-        test_factory_with_providers,
+        _test_llm_response_dataclass,
+        _test_get_llm_client_factory,
+        _test_client_types,
+        _test_client_instantiation_with_mocks,
+        _test_factory_with_providers,
     ]
 
     passed = 0
