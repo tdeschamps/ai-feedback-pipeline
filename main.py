@@ -337,19 +337,18 @@ def status() -> None:
 @click.option(
     "--type",
     "feedback_type",
-    required=True,
     type=click.Choice(["feature_request", "customer_pain"]),
-    help="Type of feedback",
+    help="Type of feedback (default: customer_pain)",
 )
-@click.option("--summary", required=True, help="Brief summary of the feedback")
+@click.option("--summary", help="Brief summary of the feedback")
 @click.option("--verbatim", required=True, help="Exact quote or verbatim feedback")
 @click.option("--confidence", default=0.8, type=float, help="Confidence score (0.0-1.0)")
 @click.option("--transcript-id", default="manual", help="Source transcript ID")
 @click.option("--context", help="Additional context for the feedback")
 @click.option("--output", help="Output file for results", type=click.Path(path_type=Path))
 def process_feedback(
-    feedback_type: str,
-    summary: str,
+    feedback_type: str | None,
+    summary: str | None,
     verbatim: str,
     confidence: float,
     transcript_id: str,
@@ -358,19 +357,23 @@ def process_feedback(
 ) -> None:
     """Process a single feedback directly through the pipeline."""
     try:
+        # Set default feedback type if not provided
+        if feedback_type is None:
+            feedback_type = "customer_pain"
+
         # Validate confidence
         if not (0.0 <= confidence <= 1.0):
             click.echo(f"❌ Confidence must be between 0.0 and 1.0, got: {confidence}", err=True)
             sys.exit(1)
 
-        # Validate inputs
-        if not summary.strip():
-            click.echo("❌ Summary cannot be empty", err=True)
-            sys.exit(1)
-
+        # Validate required inputs
         if not verbatim.strip():
             click.echo("❌ Verbatim cannot be empty", err=True)
             sys.exit(1)
+
+        # Generate summary from verbatim if not provided
+        if not summary:
+            summary = verbatim[:100] + "..." if len(verbatim) > 100 else verbatim
 
         # Run async processing
         result = asyncio.run(

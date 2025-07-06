@@ -93,14 +93,17 @@ class NotionClient:
         """Parse Notion page into NotionProblem object."""
         try:
             properties = page.get("properties", {})
-            # Extract title (assuming it's in a "Title" or "Name" property)
+
+            # Extract title from "Problème" property
             title = ""
-            for _prop_name, prop_data in properties.items():
-                if prop_data.get("type") == "title":
-                    title_array = prop_data.get("title", [])
+            if "Problème" in properties:
+                title_prop = properties["Problème"]
+                if title_prop.get("type") == "title":
+                    title_array = title_prop.get("title", [])
                     if title_array:
                         title = title_array[0].get("text", {}).get("content", "")
-                    break
+
+            # Extract existing feedbacks from "🚀 Customer Feedbacks 1"
             feedbacks = []
             customer_feedbacks = properties.get("🚀 Customer Feedbacks 1", {})
             for feedback in customer_feedbacks.get("rich_text", []):
@@ -120,45 +123,64 @@ class NotionClient:
                             text_after_paren = part.split(")", 1)[1].strip()
                             if text_after_paren:
                                 feedbacks.append(text_after_paren)
-            # Extract description from rich text property
+
+            # Extract description from "🚀 Customer Feedbacks" (main feedback column)
             description = ""
-            if "Description" in properties:
-                desc_prop = properties["Description"]
+            if "🚀 Customer Feedbacks" in properties:
+                desc_prop = properties["🚀 Customer Feedbacks"]
                 if desc_prop.get("type") == "rich_text":
                     rich_text = desc_prop.get("rich_text", [])
                     if rich_text:
                         description = rich_text[0].get("text", {}).get("content", "")
 
-            # Extract status
+            # Extract status from "Statut"
             status = ""
-            if "Status" in properties:
-                status_prop = properties["Status"]
+            if "Statut" in properties:
+                status_prop = properties["Statut"]
                 if status_prop.get("type") == "select":
                     select_data = status_prop.get("select")
                     if select_data:
                         status = select_data.get("name", "")
 
-            # Extract priority
+            # Extract priority from "Score Impact" (using this as priority indicator)
             priority = None
-            if "Priority" in properties:
-                priority_prop = properties["Priority"]
-                if priority_prop.get("type") == "select":
-                    select_data = priority_prop.get("select")
-                    if select_data:
-                        priority = select_data.get("name")
+            if "Score Impact" in properties:
+                priority_prop = properties["Score Impact"]
+                if priority_prop.get("type") == "number":
+                    score = priority_prop.get("number")
+                    if score is not None:
+                        # Convert score to priority level
+                        if score >= 8:
+                            priority = "High"
+                        elif score >= 5:
+                            priority = "Medium"
+                        else:
+                            priority = "Low"
 
-            # Extract tags
+            # Extract tags from "Thèmes" and "Composant"
             tags = []
-            if "Tags" in properties:
-                tags_prop = properties["Tags"]
-                if tags_prop.get("type") == "multi_select":
-                    multi_select = tags_prop.get("multi_select", [])
-                    tags = [tag.get("name", "") for tag in multi_select]
 
-            # Extract feedback count
+            # Add themes
+            if "Thèmes" in properties:
+                themes_prop = properties["Thèmes"]
+                if themes_prop.get("type") == "multi_select":
+                    multi_select = themes_prop.get("multi_select", [])
+                    tags.extend([tag.get("name", "") for tag in multi_select])
+
+            # Add component as tag
+            if "Composant" in properties:
+                component_prop = properties["Composant"]
+                if component_prop.get("type") == "select":
+                    select_data = component_prop.get("select")
+                    if select_data:
+                        component = select_data.get("name", "")
+                        if component:
+                            tags.append(f"Component: {component}")
+
+            # Extract feedback count from "# clients"
             feedback_count = 0
-            if "Feedback Count" in properties:
-                count_prop = properties["Feedback Count"]
+            if "# clients" in properties:
+                count_prop = properties["# clients"]
                 if count_prop.get("type") == "number":
                     feedback_count = count_prop.get("number", 0) or 0
 
@@ -195,26 +217,32 @@ class NotionClient:
             feedback_entry += f"**Summary:** {feedback.summary}\n"
             feedback_entry += f'**Verbatim:** "{feedback.verbatim}"\n'
 
-            # Get existing description
-            existing_desc = ""
+            # Get existing feedback content from "🚀 Customer Feedbacks 1"
+            existing_feedback = ""
             properties = page.get("properties", {})
-            if "Description" in properties:
-                desc_prop = properties["Description"]
-                if desc_prop.get("type") == "rich_text":
-                    rich_text = desc_prop.get("rich_text", [])
+            if "🚀 Customer Feedbacks 1" in properties:
+                feedback_prop = properties["🚀 Customer Feedbacks 1"]
+                if feedback_prop.get("type") == "rich_text":
+                    rich_text = feedback_prop.get("rich_text", [])
                     if rich_text:
-                        existing_desc = rich_text[0].get("text", {}).get("content", "")
+                        existing_feedback = rich_text[0].get("text", {}).get("content", "")
 
-            # Update the page
+            # Get current client count
+            current_client_count = 0
+            if "# clients" in properties:
+                count_prop = properties["# clients"]
+                if count_prop.get("type") == "number":
+                    current_client_count = count_prop.get("number", 0) or 0
+
+            # Update the page with correct column names
             update_data = {
                 "properties": {
-                    "Description": {
-                        "rich_text": [{"text": {"content": existing_desc + feedback_entry}}]
+                    "🚀 Customer Feedbacks 1": {
+                        "rich_text": [{"text": {"content": existing_feedback + feedback_entry}}]
                     },
-                    "Feedback Count": {
-                        "number": properties.get("Feedback Count", {}).get("number", 0) + 1
-                    },
-                    "Last Updated": {"date": {"start": datetime.now().isoformat()}},
+                    "# clients": {"number": current_client_count + 1},
+                    # Update the "Date" field (assuming it tracks last feedback date)
+                    "Date": {"date": {"start": datetime.now().isoformat()}},
                 }
             }
 
@@ -236,10 +264,10 @@ class NotionClient:
             new_page_data = {
                 "parent": {"database_id": self.database_id},  # type: ignore
                 "properties": {
-                    "Name": {  # Assuming title property is called "Name"
+                    "Problème": {  # Title column
                         "title": [{"text": {"content": f"New Issue: {feedback.summary[:50]}..."}}]
                     },
-                    "Description": {
+                    "🚀 Customer Feedbacks 1": {
                         "rich_text": [
                             {
                                 "text": {
@@ -253,9 +281,10 @@ class NotionClient:
                             }
                         ]
                     },
-                    "Status": {"select": {"name": "New"}},
-                    "Priority": {"select": {"name": "Medium"}},
-                    "Feedback Count": {"number": 1},
+                    "Statut": {"select": {"name": "New"}},
+                    "Score Impact": {"number": 5},  # Default medium impact
+                    "# clients": {"number": 1},
+                    "Date": {"date": {"start": datetime.now().isoformat()}},
                 },
             }
 

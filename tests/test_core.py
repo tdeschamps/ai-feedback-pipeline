@@ -5,7 +5,7 @@ Simplified tests for the AI Feedback Pipeline core functionality.
 import os
 import sys
 from datetime import datetime
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -20,16 +20,60 @@ os.environ.setdefault("ANTHROPIC_API_KEY", "test-key")
 
 @pytest.fixture(autouse=True)
 def setup_mocks():
-    """Set up mocks for external dependencies."""
+    """Set up comprehensive mocks for external dependencies."""
+    # Mock LangChain core components that cause Pydantic discriminator issues
+    mock_ai_message = MagicMock()
+    mock_ai_message.content = "test response"
+
+    mock_human_message = MagicMock()
+    mock_system_message = MagicMock()
+
+    # Mock embedding functions
+    mock_embeddings = MagicMock()
+    mock_embeddings.embed_documents.return_value = [[0.1, 0.2, 0.3]]
+    mock_embeddings.aembed_documents.return_value = [[0.1, 0.2, 0.3]]
+
+    # Mock LLM clients
+    mock_chat_openai = MagicMock()
+    mock_chat_openai.ainvoke.return_value = mock_ai_message
+
     mock_modules = {
-        "langchain.schema": Mock(),
-        "langchain_anthropic": Mock(),
-        "langchain_community.embeddings": Mock(),
-        "langchain_community.llms": Mock(),
-        "langchain_openai": Mock(),
-        "chromadb": Mock(),
-        "pinecone": Mock(),
-        "notion_client": Mock(),
+        # Core LangChain modules
+        "langchain": MagicMock(),
+        "langchain.schema": MagicMock(
+            HumanMessage=mock_human_message,
+            SystemMessage=mock_system_message,
+            AIMessage=mock_ai_message,
+        ),
+        "langchain_core": MagicMock(),
+        "langchain_core.messages": MagicMock(
+            HumanMessage=mock_human_message,
+            SystemMessage=mock_system_message,
+            AIMessage=mock_ai_message,
+        ),
+        "langchain_openai": MagicMock(
+            ChatOpenAI=lambda **kwargs: mock_chat_openai,
+            OpenAIEmbeddings=lambda **kwargs: mock_embeddings,
+        ),
+        "langchain_anthropic": MagicMock(
+            ChatAnthropic=lambda **kwargs: mock_chat_openai,
+        ),
+        "langchain_huggingface": MagicMock(
+            HuggingFaceEmbeddings=lambda **kwargs: mock_embeddings,
+        ),
+        "langchain_ollama": MagicMock(
+            ChatOllama=lambda **kwargs: mock_chat_openai,
+        ),
+        "langchain_community": MagicMock(),
+        "langchain_community.embeddings": MagicMock(),
+        "langchain_community.llms": MagicMock(),
+        # Vector stores and databases
+        "chromadb": MagicMock(),
+        "pinecone": MagicMock(),
+        "notion_client": MagicMock(),
+        # Other dependencies
+        "sentence_transformers": MagicMock(),
+        "groq": MagicMock(),
     }
 
     with patch.dict("sys.modules", mock_modules):
@@ -48,38 +92,44 @@ class TestBasicFunctionality:
 
     def test_feedback_dataclass(self):
         """Test Feedback dataclass creation."""
-        import extract
+        # Import after mocking to avoid Pydantic issues
+        with patch("extract.get_llm_client") as mock_get_client:
+            mock_get_client.return_value = Mock()
+            import extract
 
-        feedback = extract.Feedback(
-            type="feature_request",
-            summary="Test feedback",
-            verbatim="This is a test feedback",
-            confidence=0.9,
-            transcript_id="test_transcript",
-            timestamp=datetime.now(),
-            context="test context",
-        )
+            feedback = extract.Feedback(
+                type="feature_request",
+                summary="Test feedback",
+                verbatim="This is a test feedback",
+                confidence=0.9,
+                transcript_id="test_transcript",
+                timestamp=datetime.now(),
+                context="test context",
+            )
 
-        assert feedback.type == "feature_request"
-        assert feedback.summary == "Test feedback"
-        assert feedback.confidence == 0.9
+            assert feedback.type == "feature_request"
+            assert feedback.summary == "Test feedback"
+            assert feedback.confidence == 0.9
 
     def test_embedding_document_dataclass(self):
         """Test EmbeddingDocument dataclass creation."""
-        import embed
+        # Import after mocking to avoid Pydantic issues
+        with patch("embed.get_llm_client") as mock_get_client:
+            mock_get_client.return_value = Mock()
+            import embed
 
-        doc = embed.EmbeddingDocument(
-            id="test-doc-1",
-            content="Test document content",
-            embedding=[0.1, 0.2, 0.3, 0.4, 0.5],
-            metadata={"type": "test", "category": "unit_test"},
-            doc_type="feedback",
-        )
+            doc = embed.EmbeddingDocument(
+                id="test-doc-1",
+                content="Test document content",
+                embedding=[0.1, 0.2, 0.3, 0.4, 0.5],
+                metadata={"type": "test", "category": "unit_test"},
+                doc_type="feedback",
+            )
 
-        assert doc.id == "test-doc-1"
-        assert doc.content == "Test document content"
-        assert len(doc.embedding) == 5
-        assert doc.doc_type == "feedback"
+            assert doc.id == "test-doc-1"
+            assert doc.content == "Test document content"
+            assert len(doc.embedding) == 5
+            assert doc.doc_type == "feedback"
 
 
 class TestVectorStores:
@@ -98,9 +148,13 @@ class TestVectorStores:
             mock_client = Mock()
             mock_collection = Mock()
 
-            with patch("embed.chromadb") as mock_chromadb:
+            with (
+                patch("embed.chromadb") as mock_chromadb,
+                patch("embed.get_llm_client") as mock_get_client,
+            ):
                 mock_chromadb.PersistentClient.return_value = mock_client
                 mock_client.get_or_create_collection.return_value = mock_collection
+                mock_get_client.return_value = Mock()
 
                 import embed
 
@@ -123,10 +177,14 @@ class TestVectorStores:
             mock_pinecone_instance = Mock()
             mock_index = Mock()
 
-            with patch("embed.Pinecone") as mock_pinecone_class:
+            with (
+                patch("embed.Pinecone") as mock_pinecone_class,
+                patch("embed.get_llm_client") as mock_get_client,
+            ):
                 mock_pinecone_class.return_value = mock_pinecone_instance
                 mock_pinecone_instance.list_indexes.return_value = []
                 mock_pinecone_instance.Index.return_value = mock_index
+                mock_get_client.return_value = Mock()
 
                 import embed
 
@@ -149,7 +207,10 @@ class TestPipelineComponents:
             mock_settings.chromadb_persist_directory = "./test_chroma"
             mock_settings.chromadb_collection_name = "test_collection"
 
-            with patch("embed.chromadb"), patch("embed.get_llm_client") as mock_get_client:
+            with (
+                patch("embed.chromadb"),
+                patch("embed.get_llm_client") as mock_get_client,
+            ):
                 mock_client = Mock()
                 mock_client.embed.return_value = [[0.1, 0.2, 0.3]]
                 mock_get_client.return_value = mock_client

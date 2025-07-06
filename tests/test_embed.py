@@ -469,7 +469,10 @@ class TestPineconeVectorStore:
         mock_settings.pinecone_index_name = "existing-index"
 
         mock_pc = Mock()
-        mock_pc.list_indexes.return_value = [Mock(name="existing-index")]
+        # Create a mock index object with .name attribute
+        mock_index = Mock()
+        mock_index.name = "existing-index"
+        mock_pc.list_indexes.return_value = [mock_index]
         mock_pinecone_class.return_value = mock_pc
 
         PineconeVectorStore()

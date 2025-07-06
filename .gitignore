@@ -334,3 +334,4 @@ settings.local.py
 # Project specific
 # Uncomment if you want to ignore specific project files
 # .project_specific/
+test_transcripts/*
