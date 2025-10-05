@@ -1,0 +1,79 @@
+# Gitleaks configuration file
+# Detects hardcoded secrets, API keys, and sensitive information in git repositories
+
+title = "AI Feedback Pipeline - Gitleaks Configuration"
+
+[extend]
+# Extend default rules
+useDefault = true
+
+[allowlist]
+description = "Allowlist for false positives"
+regexes = [
+  # Allow placeholder values in example/template files
+  '''your_.*_key_here''',
+  '''your_.*_token_here''',
+  '''your_.*_secret_here''',
+  '''example\.com''',
+  '''your\.email@example\.com''',
+  '''sk-[a-zA-Z0-9]{48}''',       # Allow OpenAI key pattern in .env.example
+]
+
+paths = [
+  # Ignore example and test files
+  '''.env.example''',
+  '''tests/.*_fixtures\.py''',
+  '''tests/.*_mocks\.py''',
+  '''.*\.md$''',               # Allow markdown files to have example keys
+  '''SECURITY\.md''',
+  '''CONTRIBUTING\.md''',
+]
+
+# Additional custom rules for this project
+[[rules]]
+id = "openai-api-key"
+description = "Detected OpenAI API Key"
+regex = '''(?i)(sk-[a-zA-Z0-9]{48})'''
+tags = ["key", "openai"]
+
+[[rules]]
+id = "anthropic-api-key"
+description = "Detected Anthropic API Key"
+regex = '''(?i)(sk-ant-[a-zA-Z0-9\-]{95,})'''
+tags = ["key", "anthropic"]
+
+[[rules]]
+id = "notion-api-key"
+description = "Detected Notion API Key"
+regex = '''(?i)(secret_[a-zA-Z0-9]{43})'''
+tags = ["key", "notion"]
+
+[[rules]]
+id = "pinecone-api-key"
+description = "Detected Pinecone API Key"
+regex = '''(?i)([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})'''
+tags = ["key", "pinecone"]
+
+[[rules]]
+id = "groq-api-key"
+description = "Detected Groq API Key"
+regex = '''(?i)(gsk_[a-zA-Z0-9]{52})'''
+tags = ["key", "groq"]
+
+[[rules]]
+id = "huggingface-token"
+description = "Detected HuggingFace Token"
+regex = '''(?i)(hf_[a-zA-Z0-9]{36})'''
+tags = ["key", "huggingface"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Detected Generic API Key"
+regex = '''(?i)api[_-]?key['\"]?\s*[:=]\s*['\"]?([a-zA-Z0-9_\-]{32,})'''
+tags = ["key", "generic"]
+
+[[rules]]
+id = "env-api-key"
+description = "Detected API Key in Environment Variable"
+regex = '''(?i)(API_KEY|APIKEY|SECRET_KEY|SECRETKEY|ACCESS_KEY|ACCESSKEY)['\"]?\s*[:=]\s*['\"]?([a-zA-Z0-9_\-]{16,})'''
+tags = ["key", "env"]

@@ -1,0 +1,7 @@
+# Gitleaks ignore file
+# Add patterns for false positives here
+
+# Example patterns (uncomment if needed):
+# .env.example:OPENAI_API_KEY=your_openai_key_here
+# README.md:OPENAI_API_KEY=your_openai_key_here
+# SECURITY.md:security@yourproject.org
