@@ -1,0 +1,50 @@
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.2
+    hooks:
+      - id: gitleaks
+        name: gitleaks detect secrets
+        entry: gitleaks detect --no-git -v --redact --config=.gitleaks.toml
+        language: golang
+        types: [file]
+        stages: [commit, push]
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.8
+    hooks:
+      - id: bandit
+        name: bandit security scan
+        entry: bandit -r . -c .bandit
+        language: python
+        types: [python]
+        stages: [commit, push]
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        name: flake8 lint
+        entry: flake8 .
+        language: python
+        types: [python]
+        stages: [commit]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.8
+    hooks:
+      - id: ruff
+        name: ruff lint
+        entry: ruff check .
+        language: python
+        types: [python]
+        stages: [commit]
+
+  - repo: https://github.com/python-security/safety-pre-commit
+    rev: v2.3.5
+    hooks:
+      - id: safety
+        name: safety check dependencies
+        entry: safety check --full-report
+        language: python
+        types: [python]
+        stages: [commit, push]
